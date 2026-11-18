@@ -1,0 +1,11 @@
+# ---- KYAREY GITHUB MA UPLOAD NA KARVU ----
+service-account*.json
+*.key
+*.pem
+.env
+backups/
+backup/backups/
+SURYAZEN_backup_*.json
+SURYAZEN_data.json
+SURYAZEN_master_*.xlsx
+*.log
