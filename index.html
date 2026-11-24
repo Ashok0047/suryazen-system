@@ -1524,4 +1524,282 @@ function jbView(id){const j=G('jobs',id);if(!j)return;const row=(n,v)=>`<div cla
  bigModal(`<div class="row"><h2 class="sp">${E(j.cno||'')} – ${E(j.customer)}</h2><button class="sm" onclick="closeM()">Close</button></div><h3>Customer</h3><div class="vg">${row('Mobile',j.phone)}${row('Alternate mobile',j.alt)}${row('Sales person',j.salesBy)}${row('City / area',j.city)}${row('Address',j.site)}${row('System size (kW)',j.kw)}</div><h3>Material</h3><div class="vg">${row('Panel',j2([j.pBrand,j.pWp&&j.pWp+' Wp',j.pN&&j.pN+' nos']))}${row('Inverter',j2([j.iBrand,j.iKw&&j.iKw+' kW',j.iN&&'qty '+j.iN]))}${row('Pipes',L2(j.pipes))}${row('Other material',L2(j.oth))}${row('Material needed',needTxt(j))}</div><h3>Work</h3><div class="vg">${row('Fabrication',j2([wl(j.fabSt),j.fabBy&&staffName(j.fabBy),j.fabName,j.fabDate&&fd(j.fabDate)]))}${row('Wiring',j2([wl(j.wireSt),j.wireBy&&staffName(j.wireBy),j.wireName,j.wireDate&&fd(j.wireDate)]))}${row('Net meter',j2([j.meterSt,j.meterNo,j.meterDate&&fd(j.meterDate)]))}${row('Commissioning',j2([j.comSt,j.comDate&&fd(j.comDate)]))}${row('Status',jobStat(j))}</div><h3>Serial numbers</h3><div class="vg">${row('Panel serials',j.serP)}${row('Inverter serials',j.serI)}</div>${j.note?`<h3>Note</h3><div class="vg">${row('Note',j.note)}</div>`:''}<div class="row" style="margin-top:14px"><button class="btn nv" onclick="closeM();jbOpen('${id}',1)">Edit</button><button class="btn" onclick="closeM()">Close</button></div>`)}
 </script>
 
+
+<style>
+/* ===== v6: smart tables, merged Customers, stock-by-customer, record grids ===== */
+.xl{max-height:calc(100vh - 110px);overscroll-behavior:contain}
+.xt td.w1,.xt th.w1{min-width:72px}.xt td.w2,.xt th.w2{min-width:104px}.xt td.w3,.xt th.w3{min-width:136px}.xt td.w4,.xt th.w4{min-width:190px}
+.xt td.wrap{white-space:normal;min-width:270px;max-width:330px;line-height:1.35;overflow:visible;text-overflow:clip}
+.xt td.wrap2{white-space:normal;min-width:210px;max-width:280px;line-height:1.35;overflow:visible;text-overflow:clip}
+.xt th.wrap,.xt th.wrap2{white-space:nowrap}
+.xt .kn{left:44px;min-width:190px;max-width:240px;border-right:2px solid var(--bd)}
+.xt td.k.kn{background:#fff}.xt tbody tr:nth-child(even) td.k.kn{background:#f7faf6}.xt tbody tr:hover td.k.kn{background:#e6f1e0}
+.xt td.k.k1{background:#fff}.xt tbody tr:nth-child(even) td.k.k1{background:#f7faf6}.xt tbody tr:hover td.k.k1{background:#e6f1e0}
+.xt td.k{overflow:hidden}
+.xt td.ka{background:#fff}
+.xt .rb{box-shadow:inset 4px 0 0 var(--rc,#2f9e44)}
+.sm2{font-size:11px;color:var(--mut);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xt td.tx{cursor:pointer}
+.hint{font-size:12px;color:var(--mut);display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:2px 2px 8px}.hint kbd{background:#eef2f6;border:1px solid #cfd8e2;border-bottom-width:2px;border-radius:5px;padding:0 6px;font:600 11px inherit;color:#33414e}
+.tb6{display:grid;grid-template-columns:minmax(220px,1.3fr) repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end}
+.tb6 label{margin:0;font-size:11px;text-transform:uppercase;letter-spacing:.05em}.tb6 input,.tb6 select{margin-top:3px;height:40px}
+.chipbar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 4px}.chipbar button{border:1px solid var(--bd);background:#fff;border-radius:99px;padding:6px 12px;font-size:12.5px;font-weight:700;color:#3b4a58;cursor:pointer}.chipbar button.on{background:var(--navy);color:#fff;border-color:var(--navy)}.chipbar button em{font-style:normal;opacity:.7;margin-left:6px}
+.zs span{box-shadow:0 1px 2px #0e22330a}
+/* merged customer form */
+.fx{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:0 16px}.fx>.wd{grid-column:1/-1}.fx>.w2{grid-column:span 2}
+@media(max-width:620px){.fx>.w2{grid-column:1/-1}}
+.fs{border:1px solid var(--bd);border-radius:14px;padding:6px 16px 12px;margin:12px 0;background:#fff}.fs>h3{margin:12px 0 4px!important;display:flex;align-items:center;gap:8px}.fs>h3 .tag{text-transform:none;letter-spacing:0}
+.fs.alt{background:#f8fbf7}
+.pnlsum{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#eef6ec;border:1px dashed #9cc690;border-radius:10px;padding:8px 12px;margin:6px 0;font-weight:700;color:#24602a}
+.wkc{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}.wkc .sm{height:34px}
+.vcard{border:1px solid var(--bd);border-radius:14px;padding:4px 16px 12px;margin:10px 0;background:#fff}.vcard h3{margin:12px 0 4px!important}
+.big .vg{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.issl .it{padding:6px 0;border-bottom:1px solid var(--bd)}
+/* stock issue */
+.cinfo{background:#f3f8f2;border:1px solid #cfe3ca;border-radius:12px;padding:10px 14px;margin:6px 0;font-size:13.5px;display:none}.cinfo.on{display:block}.cinfo b{color:var(--navy)}.cinfo .gr{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:4px 16px}.cinfo .gr span{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
+div.dg{color:var(--fg)}
+/* record cards flow into a grid (admin + staff panels) */
+#main.rg{display:grid;grid-template-columns:repeat(auto-fill,minmax(400px,1fr));gap:14px;align-items:start;align-content:start}
+#main.rg>*{grid-column:1/-1;margin:0}
+#main.rg>.card:not(.warn):not(.bad):not(:has(table)):not(:has(select)):not(:has(input)):not(:has(textarea)),#main.rg>.cr{grid-column:auto}
+#main.rg>.card>.it{flex-wrap:wrap;align-items:flex-start}
+/* dashboard additions */
+.vcol{width:100%;height:auto}
+.fun{display:grid;grid-template-columns:110px 1fr 40px;gap:8px;align-items:center;margin:7px 0;font-size:13px}.fun div{height:22px;background:#eef2ee;border-radius:6px;overflow:hidden}.fun u{display:block;height:100%;border-radius:6px}.fun b{text-align:right}
+.age{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.age div{border-radius:12px;padding:12px;text-align:center;background:#f5f8fb;border:1px solid var(--bd)}.age b{display:block;font-size:24px;color:var(--navy)}.age span{font-size:11.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.age .a1{border-top:3px solid #2f9e44}.age .a2{border-top:3px solid #d9a21f}.age .a3{border-top:3px solid #e07b39}.age .a4{border-top:3px solid #c0392b}
+.mini2{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 8px}
+@media(max-width:700px){.age{grid-template-columns:repeat(2,1fr)}.tb6{grid-template-columns:1fr 1fr}.tb6>:first-child{grid-column:1/-1}}
+</style>
+<script>
+/* ===== v6 ===== */
+const lc6=s=>String(s??'').toLowerCase(),ph6=v=>String(v||'').replace(/\D/g,'').slice(-10);
+const has6=(parts,q)=>{const t=lc6(q).trim();if(!t)return true;const h=lc6(parts.join(' '));return t.split(/\s+/).every(w=>h.includes(w))};
+const SALESN6=()=>staffBy('sales').map(u=>u.name);
+CFALL=true;
+/* ---- Shift + mouse wheel = scroll tables sideways ---- */
+document.addEventListener('wheel',e=>{const x=e.target.closest&&e.target.closest('.xl');if(!x||!e.shiftKey)return;const d=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;if(x.scrollWidth>x.clientWidth){x.scrollLeft+=d;e.preventDefault()}},{passive:false});
+const HINT6='<div class="hint"><span><kbd>Shift</kbd> + mouse wheel = scroll sideways</span><span>Mouse wheel = scroll up / down</span></div>',HINTE6=HINT6.replace('</div>','<span>Click a cell = edit it</span></div>');
+/* =========================================================
+   LEADS + PENDING LEADS  (one clean table, searchable)
+   ========================================================= */
+let LQ='',PQ='',LDV6={ctx:'leads'};
+const ldTag=s=>`<i class="tag ${s=='agreed'||s=='doc_sent'?'g':s=='lost'?'r':'b'}">${E(LST[s]||s||'')}</i>`;
+function ldRows6(){const c=LDV6.ctx,T=today();let ls=L('leads');
+ if(c=='pend'){ls=ls.filter(l=>OPEN.includes(l.status)&&(!PS||l.assignedTo==PS)&&(!PT||l.by==PT))}
+ else{const mine=c=='mine';ls=ls.filter(l=>!mine||l.assignedTo==ME.id);if(LF=='open')ls=ls.filter(l=>OPEN.includes(l.status));else if(LF=='due')ls=ls.filter(l=>OPEN.includes(l.status)&&l.followDate&&l.followDate<=T);else if(LF!='all')ls=ls.filter(l=>l.status==LF);if(!mine&&LS)ls=ls.filter(l=>l.assignedTo==LS)}
+ const q=c=='pend'?PQ:LQ;
+ ls=ls.filter(l=>has6([l.name,l.phone,l.addr,l.city,l.note,l.kw,l.panelName,LST[l.status],staffName(l.assignedTo),staffName(l.by)],q));
+ const I=ls.map(l=>[l,pendInfo(l)]);
+ if(c=='pend')I.sort((a,b)=>b[1].h-a[1].h);else I.sort((a,b)=>(a[0].followDate||'9').localeCompare(b[0].followDate||'9'));return I}
+function ldAct6(l){const c=LDV6.ctx,sl=staffBy('sales').filter(u=>u.id!=l.assignedTo),can=ME.admin||(ME.dept=='calling'&&l.by==ME.id);
+ const open=c=='mine'?`<button class="sm nv" onclick="leadForm('${l.id}')">Update</button>`:`<button class="sm nv" onclick="ldOpen('${l.id}','${c}')">${ME.admin?'Update':'View'}</button>`;
+ const q=c=='mine'&&l.status!='lost'?`<button class="sm pri" onclick="QB=qbNew();QB.leadId='${l.id}';QB.cust='${E(l.name)}';QB.phone='${E(l.phone)}';QB.city='${E(l.city)}';VIEW='newq';shell()">Quotation</button>`:'';
+ return `<div class="ab" style="flex-wrap:nowrap">${open}${q}${ME.admin?`<button class="sm dg" onclick="ldDel('${l.id}','${c}')">Delete</button>`:''}</div>`}
+function ldFwdCell6(l){const c=LDV6.ctx,sl=staffBy('sales').filter(u=>u.id!=l.assignedTo),can=ME.admin||(ME.dept=='calling'&&l.by==ME.id);if(!(can&&sl.length))return '';return `<div class="ab" style="flex-wrap:nowrap;justify-content:flex-start"><select id="sf_${l.id}" style="width:130px;margin:0;height:32px;padding:0 6px;font-size:12.5px"><option value="">Forward to…</option>${sl.map(u=>`<option value="${u.id}">${E(u.name)}</option>`).join('')}</select><button class="sm" onclick="ldFwd('${l.id}','${c}')">Send</button></div>`}
+function ldTbl6(){const I=ldRows6(),c=LDV6.ctx,T=today(),pend=c=='pend';
+ const head=['#','Customer','Mobile','Address / city','Required','Status','Sales','From','Lead date','Follow-up','Pending','Remark','Forward','Actions'];
+ const cls=['k k1','k kn','w2','wrap','w2','w3','w3','w3','w2','w2','w3','wrap2','w4','k ka'];
+ const body=I.map(([l,p],i)=>{const due=OPEN.includes(l.status)&&l.followDate&&l.followDate<=T;
+  return `<tr><td class="k k1">${i+1}</td><td class="k kn rb" style="--rc:${p.c}"><b>${E(l.name||'—')}</b></td><td class="w2">${E(l.phone||'')}${zCallA(l.phone)}</td><td class="wrap">${E([l.addr,l.city].filter(Boolean).join(', '))}</td><td class="w2">${l.kw?`<b>${E(l.kw)} kW</b>`:''}${l.panelName?`<div class="sm2">${E(l.panelName)}</div>`:''}</td><td class="w3">${ldTag(l.status)}</td><td class="w3">${E(staffName(l.assignedTo))}</td><td class="w3">${E(staffName(l.by))}</td><td class="w2">${fd(l.date)}</td><td class="w2">${l.followDate?`<b style="${due?'color:var(--rd)':''}">${fd(l.followDate)}</b>`:'<span class="m">not set</span>'}</td><td class="w3"><b style="color:${p.c}">${dh(p.h)}</b>${pend?`<div>${p.fl.map(x=>`<i class="tag">${x}</i>`).join(' ')}</div>`:''}</td><td class="wrap2">${E(l.note||'')}</td><td class="w4">${ldFwdCell6(l)}</td><td class="k ka" style="min-width:${ME.admin?200:150}px">${ldAct6(l)}</td></tr>`}).join('');
+ return `<div class="zs"><span><b>${I.length}</b>${pend?'open leads':'leads shown'}</span><span><b>${I.filter(x=>x[0].followDate&&x[0].followDate<=T&&OPEN.includes(x[0].status)).length}</b>follow-up due</span><span><b>${I.filter(x=>x[1].h>=72).length}</b>pending 3+ days</span></div>${HINT6}<div class="xl"><table class="xt"><thead><tr>${head.map((h,i)=>`<th class="${cls[i]}">${h}</th>`).join('')}</tr></thead><tbody>${body||`<tr><td colspan="${head.length}" class="m" style="padding:26px">No leads match.</td></tr>`}</tbody></table></div>`}
+function ldFill6(){const b=$('ld_box');if(b)b.innerHTML=ldTbl6()}
+const ldSearch6=(ctx,ph)=>`<input id="ld_q" type="search" placeholder="${ph}" value="${E(ctx=='pend'?PQ:LQ)}" oninput="${ctx=='pend'?'PQ':'LQ'}=this.value;ldFill6()" style="margin:0">`;
+function v6Leads(mine){LDV6={ctx:mine?'mine':'leads'};const due=L('leads').filter(l=>(!mine||l.assignedTo==ME.id)&&OPEN.includes(l.status)&&l.followDate&&l.followDate<=today()).length;
+ $('main').innerHTML=`<div class="dh"><div><h2>${mine?'My leads':'Leads'}</h2><div class="sub">Customer name, mobile, address, follow-up and who it is with – all in one row. Search by anything.</div></div></div>${stageCards(mine?ME.id:LS)}${due?`<div class="card warn"><b>${due}</b> follow-up${due>1?'s':''} due today or overdue.</div>`:''}
+ <div class="card"><div class="tb6"><label>Search${ldSearch6('leads','Name / mobile / address / city / remark / staff…')}</label><label>Status<select onchange="LF=this.value;draw()">${[['open','Open'],['due','Due / overdue']].concat(Object.entries(LST)).concat([['all','All']]).map(o=>`<option value="${o[0]}" ${LF==o[0]?'selected':''}>${o[1]}</option>`).join('')}</select></label>${mine?'':`<label>Sales person<select onchange="LS=this.value;draw()"><option value="">All sales</option>${staffBy('sales').map(u=>`<option value="${u.id}" ${LS==u.id?'selected':''}>${E(u.name)}</option>`).join('')}</select></label>`}</div></div><div id="ld_box"></div>`;ldFill6()}
+leadsView=v6Leads;VIEWS.leads=()=>v6Leads(false);VIEWS.myleads=()=>v6Leads(true);
+VIEWS.pend=function(){LDV6={ctx:'pend'};const sl=staffBy('sales'),cl=staffBy('calling'),open=L('leads').filter(l=>OPEN.includes(l.status)),pool=open.filter(l=>(!PS||l.assignedTo==PS)&&(!PT||l.by==PT)),I=pool.map(l=>[l,pendInfo(l)]),k=(a,b,c)=>`<div class="zk ${c||''}"><span>${b}</span><b>${a}</b><em>&nbsp;</em></div>`,has=f=>I.filter(x=>x[1].fl.includes(f)).length;
+ const byT=cl.map(u=>{const all=L('leads').filter(l=>l.by==u.id&&(!PS||l.assignedTo==PS));return[u,all.length,all.filter(l=>OPEN.includes(l.status)).length]});
+ $('main').innerHTML=`<div class="dh"><div><h2>Pending leads</h2><div class="sub">Every open lead, oldest first. Red = needs action now.</div></div></div>
+ <div class="zks">${k(I.length,'Open leads')}${k(has('Not contacted'),'Not contacted','y')}${k(I.filter(x=>x[1].h>=24).length,'Pending 24h+','y')}${k(I.filter(x=>x[1].h>=72).length,'Pending 3 days+','r')}${k(has('Follow-up missed'),'Follow-up missed','r')}${k(has('No follow-up date'),'No follow-up date','b')}</div>
+ <div class="card"><div class="tb6"><label>Search${ldSearch6('pend','Name / mobile / address / city / remark / staff…')}</label><label>Sales person<select onchange="PS=this.value;draw()"><option value="">All salespersons</option>${sl.map(u=>`<option value="${u.id}" ${PS==u.id?'selected':''}>${E(u.name)}</option>`).join('')}</select></label><label>Telecaller<select onchange="PT=this.value;draw()"><option value="">All telecallers</option>${cl.map(u=>`<option value="${u.id}" ${PT==u.id?'selected':''}>${E(u.name)}</option>`).join('')}</select></label></div>
+ <div class="chipbar">${byT.map(([u,t,o])=>`<button class="${PT==u.id?'on':''}" onclick="PT=PT=='${u.id}'?'':'${u.id}';draw()">${E(u.name)}<em>${o} open / ${t}</em></button>`).join('')}</div></div><div id="ld_box"></div>`;ldFill6()};
+/* =========================================================
+   CUSTOMERS  =  Customer File + installation work (merged)
+   ========================================================= */
+const SY6=[[r=>r.f.name,(r,v)=>{r.f.name=v},'customer'],[r=>r.f.mob,(r,v)=>{r.f.mob=v},'phone'],[r=>r.f.addr,(r,v)=>{r.f.addr=v},'site'],[r=>r.f.kw,(r,v)=>{r.f.kw=v},'kw'],[r=>r.f.np,(r,v)=>{r.f.np=v},'pN'],[r=>r.f.wp,(r,v)=>{r.f.wp=v},'pWp'],[r=>r.f.pm,(r,v)=>{r.f.pm=v},'pBrand'],[r=>r.f.pan,(r,v)=>{r.f.pan=v},'serP'],[r=>r.f.inv,(r,v)=>{r.f.inv=v},'serI'],[r=>r.sales,(r,v)=>{r.sales=v},'salesBy']];
+const em6=v=>v==null||String(v).trim()==='',nm6=(k,v)=>(k=='serP'||k=='serI')?serList(v).join('\n'):String(v??'').trim();
+function v6Mrg(r,j,src){let rc=0,jc=0;SY6.forEach(([g,s,k])=>{const fv=g(r),jv=j[k];if(nm6(k,fv)==nm6(k,jv))return;
+  if(em6(fv)&&!em6(jv)){s(r,jv);rc=1}else if(!em6(fv)&&em6(jv)){j[k]=fv;jc=1}else if(src=='job'){s(r,jv);rc=1}else{j[k]=fv;jc=1}});
+ if(!j.city&&r.city){j.city=r.city;jc=1}return{rc,jc}}
+const v6JobOfFile=r=>r?((r.jid&&G('jobs',r.jid))||L('jobs').find(j=>j.fid==r.id)||null):null;
+const v6FileOfJob=j=>{if(!j)return null;if(j.fid&&G('files',j.fid))return G('files',j.fid);const p=ph6(j.phone);return p?(CU().find(x=>ph6(x.f.mob)==p&&(!x.jid||x.jid==j.id))||null):null};
+function v6VJob(r){const j=v6JobOfFile(r);if(j)return j;const x=newJob();x.pWp='';x.customer=r.f.name||'';x.phone=r.f.mob||'';x.site=r.f.addr||'';x.kw=r.f.kw||'';x.pN=r.f.np||'';x.pWp=r.f.wp||'';x.pBrand=r.f.pm||'';x.serP=r.f.pan||'';x.serI=r.f.inv||'';x.salesBy=r.sales||'';return x}
+async function v6SyncJob(r0,create){let r=clone(r0),j=v6JobOfFile(r),isNew=false;
+ if(!j){if(!create)return null;j=Object.assign(newJob(),{id:uid(),date:r.f.date||today(),ts:nowT(),cno:nextCno(),by:(ME&&ME.id)||'',pWp:''});isNew=true}else j=clone(j);
+ const {rc,jc}=v6Mrg(r,j,'file');j.fid=r.id;if(isNew||jc){j.upd=nowT();await stSet('jobs',j.id,j)}
+ if(rc||r.jid!=j.id){r.jid=j.id;await cfPut(r)}return j}
+async function v6MakeFile(j){const D=CD(),sts=Object.keys(D.states),st=sts[0]||'GUJARAT',cs=[].concat(...Object.values(D.states)),cj=zU(j.city),city=cs.find(c=>cj&&(cj==c||cj.includes(c)))||'';
+ const stOf=Object.keys(D.states).find(s=>D.states[s].includes(city))||st,r={id:uid(),cid:cfNext(city),state:stOf,city,f:{name:j.customer,mob:j.phone,addr:j.site,kw:j.kw,np:j.pN,wp:j.pWp,pm:j.pBrand,pan:j.serP,inv:j.serI,date:j.date||today()},l:null,x:{},docs:[],ts:j.ts||nowT(),by:j.by||(ME&&ME.id)||'',jid:j.id,sales:j.salesBy||''};
+ r.folder=r.cid+'_'+cfSafe(r.f.name);await cfPut(r);const j2=clone(j);j2.fid=r.id;await stSet('jobs',j2.id,j2);return r}
+async function v6FromJob(jid,src){const j0=G('jobs',jid);if(!j0)return;const j=clone(j0),r0=v6FileOfJob(j);if(!r0){await v6MakeFile(j);return}
+ const r=clone(r0),{rc,jc}=v6Mrg(r,j,src||'job');j.fid=r.id;r.jid=j.id;if(jc||j0.fid!=r.id)await stSet('jobs',j.id,j);if(rc||r0.jid!=j.id)await cfPut(r)}
+let M6=false,MFAIL6=false,FM6=false;
+const v6Unm=()=>L('jobs').filter(j=>!(j.fid&&G('files',j.fid))).length;
+async function v6MergeAll(){if(M6)return 0;M6=true;let n=0;try{for(const j of L('jobs')){if(j.fid&&G('files',j.fid))continue;await v6FromJob(j.id,'file');n++}}catch(e){MFAIL6=true}finally{M6=false}if(n)try{await act('Merged '+n+' old customers into the Customer File')}catch(e){}return n}
+/* keep both sides in step when the old work form saves */
+const _jbSave6=jbSave;jbSave=async function(stay){const ok=await _jbSave6(stay);if(ok&&JB&&JB.id){try{await v6FromJob(JB.id)}catch(e){}}return ok};
+const _jbOpen6=jbOpen;jbOpen=function(id,step){if(!id){VIEW='cf';if($('app')&&!$('main'))shell();return cfOpen()}_jbOpen6(id,step)};
+async function v6Work(fid,step){const r=G('files',fid);if(!r)return;let j=v6JobOfFile(r);if(!j)j=await v6SyncJob(r,true);if(j)_jbOpen6(j.id,step||1)}
+async function cfWork(n){await cfSave();if(CFERR||!CF||!CF.id)return;v6Work(CF.id,n)}
+const _cfSave6=cfSave;cfSave=async function(){await _cfSave6();if(!CFERR&&CF&&CF.id&&G('files',CF.id)){try{await v6SyncJob(G('files',CF.id),true)}catch(e){}draw()}};
+const _MN6=MENU;MENU=function(){let m=_MN6();if(ME&&canCust()){m=m.filter(t=>t[0]!='jobs');const i=m.findIndex(t=>t[0]=='cf');if(i>-1)m[i]=['cf','Customers']}return m};
+zGo.cf=2;
+/* ---- helpers ---- */
+const v6Ser=r=>{const a=String(r.f.pan||'').split(/\r?\n|[,;\t]+/).map(s=>s.trim());while(a.length&&!a[a.length-1])a.pop();return a};
+function v6Pnl(r){const np=+r.f.np||0,wp=+r.f.wp||0,k=np&&wp?+(np*wp/1000).toFixed(2):0;if(!np&&!wp&&!r.f.pm)return '';return `<b>${np||'—'} × ${wp||'—'} Wp</b><div class="sm2">${[r.f.pm,k?k+' kWp':''].filter(Boolean).map(E).join(' · ')}</div>`}
+const v6Issues=r=>L('moves').filter(m=>m.type=='out'&&(m.cust==r.id||(!m.cust&&m.site&&lc6(m.site).trim()==lc6(r.f.name).trim()))).sort((a,b)=>(b.ts||'').localeCompare(a.ts||''));
+const wkTag6=j=>{const st=jobStat(j);return `<i class="tag ${st=='Complete'?'g':st=='In progress'?'s':''}">${st}</i>`};
+function v6Cols(){const D=CD(),cols=[],W={imm:'w3',date:'w2',wby:'w3',st:'w3',ws:'w3',kw:'w1 r',name:'w4',addr:'wrap',mob:'w2',cno:'w3',cost:'w2 r',subr:'w2 r',rem:'wrap2',dis:'w1',mq:'w3',div:'w3',sub:'w3',idt:'w2',scl:'w2',srv:'w2',dcre:'w3',dcr:'w3',inv:'w3'},CP=new Set(['imm','date','wby','st','ws','kw','name','addr','mob','cost','rem']);
+ const mk=(k,n,t,l)=>{const tt=t=='dd'?'dd':t=='num'?'num':t=='date'?'date':t=='tel'?'tel':'text';
+  return{n,c:CP.has(k),cls:W[k]||'',r:r=>{const v=r.f[k];if(v==null||v==='')return '';return tt=='date'?zdt(v):zNumK.has(k)?zm(v):(k=='st'||k=='ws')?zst(v):k=='mob'?E(v)+zCallA(v):E(v)},e:{t:tt,o:tt=='dd'?D[l]:null,req:k=='name',get:r=>r.f[k],set:(r,v)=>{r.f[k]=v}}}};
+ cols.push({n:'FILE',c:1,cls:'k kn',r:r=>`<b>${E(r.cid)}</b><div class="sm2">${E(r.f.name||'')}${r.city?' · '+E(r.city):''}</div>`});
+ CFF.forEach(([k,n,t,l])=>{if(k=='np')cols.push({n:'PANELS (Nos × Wp)',c:1,cls:'w3 tx',open:1,r:v6Pnl});else if(k!='wp')cols.push(mk(k,n,t,l))});
+ for(let i=0;i<19;i++)cols.push({n:'PENAL '+(i+1),c:0,cls:'w3',r:r=>E(v6Ser(r)[i]||''),e:{t:'text',get:r=>v6Ser(r)[i]||'',set:(r,v)=>{const a=v6Ser(r);while(a.length<=i)a.push('');a[i]=v.trim();while(a.length&&!a[a.length-1])a.pop();r.f.pan=a.join('\n')}}});
+ cols.push({n:'STATE',c:0,cls:'w2',r:r=>E(r.state),e:{t:'dd',o:()=>Object.keys(D.states),get:r=>r.state,set:(r,v)=>{r.state=v;if(!(D.states[v]||[]).includes(r.city))r.city=''}}});
+ cols.push({n:'CITY',c:0,cls:'w2',r:r=>E(r.city),e:{t:'dd',o:r=>D.states[r.state]||[],get:r=>r.city,set:(r,v)=>{r.city=v}}});
+ cols.push({n:'SALES PERSON',c:1,cls:'w3',r:r=>E(r.sales||''),e:{t:'dd',o:()=>SALESN6(),get:r=>r.sales||'',set:(r,v)=>{r.sales=v}}});
+ cols.push({n:'DOCS',c:1,cls:'w1 c',r:r=>{const a=cfNeed(r).length,h=cfHave(r).length;return `<i class="tag ${h==a?'g':'s'}">${h}/${a}</i>`}});
+ cols.push({n:'INSTALL WORK',c:1,cls:'w4',r:r=>{const j=v6VJob(r);return wkTag6(j)+' '+JBSTEPS.map((n,k)=>`<button class="stp ${stepDone(j,k+1)?'on':''}" title="${E(n)}" onclick="event.stopPropagation();v6Work('${r.id}',${k+1})">${k+1}</button>`).join('')}});
+ cols.push({n:'MATERIAL NEEDED',c:0,cls:'wrap2',r:r=>E(needTxt(v6VJob(r))||'')});
+ cols.push({n:'LOAN',c:1,cls:'w3',r:r=>r.l?E([r.l.app,r.l.lst].filter(Boolean).join(' · ')||'Yes'):''});
+ CFL.forEach(([k,n,t,l])=>cols.push((()=>{const tt=t=='dd'?'dd':t=='num'?'num':t=='date'?'date':'text';return{n:'Loan - '+n,c:0,cls:'w3'+(tt=='num'?' r':''),r:r=>{const v=(r.l||{})[k];return v==null||v===''?'':tt=='date'?zdt(v):zNumK.has(k)?zm(v):E(v)},e:{t:tt,o:tt=='dd'?D[l]:null,get:r=>(r.l||{})[k],set:(r,v)=>{r.l=r.l||{};r.l[k]=v}}}})()));
+ D.fields.forEach(f=>cols.push({n:f.n,c:0,cls:'w3',r:r=>E((r.x||{})[f.k]??''),e:{t:f.t=='dd'?'dd':f.t=='num'?'num':f.t=='date'?'date':'text',o:f.t=='dd'?D['x_'+f.k]:null,get:r=>(r.x||{})[f.k],set:(r,v)=>{r.x=r.x||{};r.x[f.k]=v}}}));
+ return cols}
+const v6Cells=(r,i)=>`<td class="k k1">${i+1}</td>`+ZF.map((c,x)=>(CFALL||c.c)?`<td class="${c.cls||''}${c.e?' ed':''}" data-c="${x}"${c.open?` onclick="cfOpen('${r.id}')"`:''}>${c.r(r)}</td>`:'').join('')+`<td class="k ka"><div class="ab"><button class="sm" onclick="cfView('${r.id}')">View</button><button class="sm nv" onclick="cfOpen('${r.id}')">Edit</button>${ME.admin?`<button class="sm dg" onclick="cfDelId('${r.id}')">Delete</button>`:''}</div></td>`;
+function v6Fil(){const q=CFQ.q;return CU().filter(r=>(!CFQ.s||r.state==CFQ.s)&&(!CFQ.c||r.city==CFQ.c)&&(!CFQ.wby||r.f.wby==CFQ.wby)&&(!CFQ.st||r.f.st==CFQ.st)&&(!CFQ.ws||r.f.ws==CFQ.ws)&&(!CFQ.loan||(CFQ.loan=='y'?!!r.l:!r.l))&&(!CFQ.lst||(r.l&&r.l.lst==CFQ.lst))&&(!CFQ.app||(r.l&&r.l.app==CFQ.app))&&(!CFQ.doc||(CFQ.doc=='ok'?cfHave(r).length==cfNeed(r).length:cfHave(r).length<cfNeed(r).length))&&(!CFQ.sp||r.sales==CFQ.sp)&&(!CFQ.wk||jobStat(v6VJob(r))==CFQ.wk)&&has6([r.cid,r.f.name,r.f.mob,r.f.addr,r.f.cno,r.city,r.state,r.sales,r.f.rem,r.f.dcr,r.f.pm,r.f.inv,r.f.imm,r.f.div,r.f.sub,r.f.mq],q)).sort((a,b)=>(b.ts||'').localeCompare(a.ts||''))}
+const v6Sum=a=>{const S=k=>a.reduce((t,r)=>t+(+r.f[k]||0),0),kp=a.reduce((t,r)=>t+((+r.f.np||0)*(+r.f.wp||0)/1000),0);return `<span><b>${a.length}</b>customers</span><span><b>${+S('kw').toFixed(1)}</b>kW capacity</span><span><b>${+kp.toFixed(1)}</b>kWp panels</span><span><b>${zm(S('cost'))||'₹ 0'}</b>project cost</span><span><b>${zm(S('subr'))||'₹ 0'}</b>subsidy received</span><span><b>${a.filter(r=>cfHave(r).length<cfNeed(r).length).length}</b>docs pending</span><span><b>${a.filter(r=>jobStat(v6VJob(r))!='Complete').length}</b>work pending</span>`};
+zTbl.cf={rec:id=>G('files',id),cols:()=>ZF,cells:v6Cells,sum:()=>{const e=$('cf_sum');if(e)e.innerHTML=v6Sum(v6Fil())},save:async(r,lab)=>{r.upd=nowT();await cfPut(r);try{await v6SyncJob(r,false)}catch(x){}if(SSD)try{cfDetails(r)}catch(x){}try{act('Customer '+r.cid+' updated: '+lab)}catch(x){}}};
+cfList=function(){const a=v6Fil(),b=$('cf_box');if(!b)return;ZF=v6Cols();
+ b.innerHTML=`<div class="zs" id="cf_sum">${v6Sum(a)}</div>${HINTE6}<div class="xl"><table class="xt"><thead><tr><th class="k k1">#</th>${ZF.map(c=>(CFALL||c.c)?`<th class="${(c.cls||'').replace(/\btx\b/,'')}">${E(c.n)}</th>`:'').join('')}<th class="k ka">Actions</th></tr></thead><tbody onclick="zTd(event,'cf')">${a.slice(0,CFN).map((r,i)=>`<tr data-id="${r.id}" data-i="${i}">${v6Cells(r,i)}</tr>`).join('')||`<tr><td colspan="${ZF.length+2}" class="m" style="padding:26px">No customers in this selection.</td></tr>`}</tbody></table></div>${a.length>CFN?`<button class="sm" style="margin-top:8px" onclick="CFN+=300;cfList()">Show more (${a.length-CFN} left)</button>`:''}`};
+VIEWS.cf=()=>{const D=CD(),sl=(k,t,o)=>`<label>${t}<select onchange="CFQ.${k}=this.value;cfList()"><option value="">All</option>${o.map(([v,n])=>`<option value="${E(v)}" ${CFQ[k]==v?'selected':''}>${E(n)}</option>`).join('')}</select></label>`,sd=l=>l.map(x=>[x,x]);
+ const un=v6Unm();if(un&&(ME.admin||ME.dept=='doc')&&!M6&&!MFAIL6){v6MergeAll().then(n=>{if(n){toast(n+' old customers merged into Customers ✓');if(VIEW=='cf')draw()}})}
+ $('main').innerHTML=`<div class="dh"><div><h2>Customers</h2><div class="sub">Customer file + installation work in one place. Every column of your Excel file, in the same order.</div></div><div class="row"><button class="btn pri" onclick="cfOpen()">+ New customer</button></div></div>
+ ${un&&ME.admin&&MFAIL6?`<div class="card warn">${un} old customer record${un>1?'s':''} could not be merged automatically. <button class="sm" onclick="MFAIL6=false;v6MergeAll().then(()=>draw())">Try again</button></div>`:''}${geoBar()}
+ <div class="card"><div class="tb6"><label>Search<input placeholder="File no. / name / mobile / address / consumer no. / DCR…" value="${E(CFQ.q)}" oninput="CFQ.q=this.value;cfList()" style="margin-top:3px"></label>${sl('wby','Work by',sd(D.wby))}${sl('st','Status',sd(D.st))}${sl('ws','Work status',sd(D.ws))}${sl('sp','Sales person',sd(SALESN6()))}${sl('wk','Install work',sd(['Not started','In progress','Complete']))}${FM6?sl('loan','Loan',[['y','With loan'],['n','No loan']])+sl('lst','Loan status',sd(D.lst))+sl('app','Bank',sd(D.bank))+sl('doc','Documents',[['ok','Complete'],['no','Missing']]):''}</div>
+ <div class="row" style="margin-top:10px"><button class="sm" onclick="FM6=!FM6;draw()">${FM6?'Fewer filters':'More filters (loan, documents)'}</button><button class="sm ${CFALL?'':'pri'}" onclick="CFALL=!CFALL;draw()">${CFALL?'Show fewer columns':'Show all columns'}</button><button class="sm" onclick="cfDl('c')">Customer Excel</button><button class="sm" onclick="cfDl('l')">Loan Excel</button>${ME.admin?'<button class="sm nv" onclick="VIEW=\'set\';shell()">States &amp; cities</button><button class="sm nv" onclick="cfAdmin()">Dropdowns &amp; fields</button>':''}<button class="sm" onclick="ssdPick()">${SSD?'PC folder: '+E(SSD.name):'Choose PC folder'}</button></div></div><div id="cf_box"></div>`;cfList()};
+VIEWS.jobs=VIEWS.cf;
+/* ---- the form: grouped sections instead of one long list ---- */
+function cfOpen(id){const D=CD(),sts=Object.keys(D.states);CF=id?clone(G('files',id)):{state:CFQ.s||(sts.length==1?sts[0]:''),city:CFQ.c||'',f:{date:today()},l:null,x:{},docs:[]};CF.x=CF.x||{};PEND=[];CFERR='';cfDraw()}
+const cfPnlUp=()=>{const f=CF.f,np=+f.np||0,wp=+f.wp||0,e=$('pn_sum');if(e)e.innerHTML=np&&wp?`${np} panels × ${wp} Wp = <span style="font-size:17px">${+(np*wp/1000).toFixed(2)} kWp</span>`:'Enter number of panels and watt'},cfSerUp=()=>{const e=$('pn_cnt');if(e)e.textContent=v6Ser(CF).length+(+CF.f.np?' of '+CF.f.np+' entered':' entered')};
+function cfDraw(){const D=CD(),sc=CFERR?0:(document.querySelector('#mod')||{}).scrollTop||0,sts=Object.keys(D.states),cities=D.states[CF.state]||[],have=cfHave(CF).length,need=cfNeed(CF),j=CF.id?v6JobOfFile(CF):null,
+ F=(k,t,c)=>{const x=CFF.find(a=>a[0]==k);return `<div class="${c||''}">${cfIn('f',k,x[1],t||x[2],D[x[3]])}</div>`},
+ X=(k,lab,t,c)=>`<div class="${c||''}">${cfIn('f',k,lab,t||'text')}</div>`,
+ sp=SALESN6().concat(CF.sales&&!SALESN6().includes(CF.sales)?[CF.sales]:[]);
+ bigModal(`<div class="row"><h2 class="sp">${CF.cid?E(CF.cid)+' – '+E(CF.f.name||''):'New customer'}</h2><button class="sm" onclick="closeM()">✕ Close</button></div>
+ ${CFERR?`<div class="card bad">${E(CFERR)}</div>`:''}
+ <div class="fs"><h3>1 · Customer</h3><div class="fx">
+  <label>State<select onchange="CF.state=this.value;CF.city='';cfDraw()"><option value="">— choose —</option>${sts.map(s=>`<option ${s==CF.state?'selected':''}>${E(s)}</option>`).join('')}</select></label>
+  <label>City<select onchange="CF.city=this.value"><option value="">— choose —</option>${[...new Set(cities.concat(CF.city).filter(Boolean))].map(s=>`<option ${s==CF.city?'selected':''}>${E(s)}</option>`).join('')}</select></label>
+  ${F('name','text','w2')}${F('mob')}
+  <label class="wd">ADDRESS<textarea rows="2" oninput="cfV('f','addr',this.value)">${E(CF.f.addr||'')}</textarea></label>
+  ${F('cno')}${F('imm')}${F('date')}
+  <label>SALES PERSON<select onchange="CF.sales=this.value"><option value="">— choose —</option>${sp.map(s=>`<option ${s==CF.sales?'selected':''}>${E(s)}</option>`).join('')}</select></label>
+  ${cfX(D,'c')}</div></div>
+ <div class="fs alt"><h3>2 · Work &amp; status</h3><div class="fx">${F('wby')}${F('st')}${F('ws')}${F('kw')}${F('cost')}${F('subr')}${F('rem','text','wd')}</div></div>
+ <div class="fs"><h3>3 · Panels &amp; inverter <span class="m">(panel make, how many and how many Wp – together)</span></h3><div class="fx">${X('pm','PANEL MAKE / MODEL','text','w2')}<label>No Of Panel<input type="number" value="${E(CF.f.np??'')}" oninput="cfV('f','np',this.value);cfPnlUp();cfSerUp()"></label><label>PENAL WP<input type="number" value="${E(CF.f.wp??'')}" oninput="cfV('f','wp',this.value);cfPnlUp()"></label>${F('inv')}</div>
+  <div class="pnlsum" id="pn_sum"></div>
+  <label>Panel serial numbers – one per line (PENAL 1, 2, 3 …) <span class="tag b" id="pn_cnt"></span><textarea rows="4" oninput="cfV('f','pan',this.value);cfSerUp()">${E(CF.f.pan||'')}</textarea></label></div>
+ <div class="fs alt"><h3>4 · Meter &amp; subsidy</h3><div class="fx">${F('dis')}${F('mq')}${F('div')}${F('sub')}${F('idt')}${F('scl')}${F('srv')}${F('dcre')}${F('dcr')}</div></div>
+ <div class="fs"><h3>5 · Loan</h3><label class="ck"><input type="checkbox" ${CF.l?'checked':''} onchange="CF.l=this.checked?(CF.l||{}):null;cfDraw()"> Loan is required for this customer</label>
+  ${CF.l?`<div class="m">Name, address, mobile, consumer no., capacity and project amount are taken from the customer details.</div><div class="fx">${CFL.map(([k,n,t,l])=>`<div>${cfIn('l',k,n,t,D[l])}</div>`).join('')}${cfX(D,'l')}</div>`:''}</div>
+ <div class="fs alt"><h3>6 · Installation work &amp; material ${j?wkTag6(j):''}</h3>${CF.id?`<div class="m">${j&&needTxt(j)?'Material needed: <b>'+E(needTxt(j))+'</b>':'Material not entered yet.'}</div><div class="wkc">${JBSTEPS.map((n,i)=>`<button class="sm ${j&&stepDone(j,i+1)?'pri':''}" onclick="cfWork(${i+1})">${i+1}. ${E(n)}</button>`).join('')}</div><div class="m">Saves this customer first, then opens that step (material, fabrication / wiring, serial numbers).</div>`:'<div class="m">Save the customer first – then material and work steps open here.</div>'}</div>
+ <div class="fs"><h3>7 · Documents <span class="tag ${have==need.length?'g':'s'}">${have}/${need.length}</span></h3>${SSD?'':'<div class="card warn">Documents are saved on the PC folder only. Open this on the Master PC, or <button class="sm" onclick="ssdPick()">Choose PC folder</button></div>'}
+  <div class="fx">${need.map(t=>{const ds=(CF.docs||[]).map((d,i)=>[d,i]).filter(x=>x[0].t==t),pn=PEND.map((p,i)=>[p,i]).filter(x=>x[0].t==t);return `<div class="card" style="margin:6px 0"><b>${E(t)}</b>${ds.map(([d,i])=>`<div class="m">✓ ${E(d.n)} <button class="sm" onclick="cfShow('${CF.id}',${i})">Open</button> <button class="sm dg" onclick="cfDocDel(${i})">✕</button></div>`).join('')}${pn.map(([p,i])=>`<div class="m">${E(p.f.name)} (saves on Save) <button class="sm dg" onclick="cfPendDel(${i})">✕</button></div>`).join('')}<input type="file" accept="image/*,application/pdf" multiple onchange="cfPick('${E(t)}',this)"></div>`}).join('')}</div></div>
+ <div class="row" style="margin-top:12px;position:sticky;bottom:0;background:#fff;padding:10px 0"><button class="btn pri sp" onclick="cfSave()">Save</button>${CF.id&&ME.admin?'<button class="btn dg" onclick="cfDel()">Delete</button>':''}<button class="btn" onclick="closeM()">Cancel</button></div>`);
+ cfPnlUp();cfSerUp();const m=document.querySelector('#mod');if(m)m.scrollTop=sc}
+function cfView(id){const r=G('files',id);if(!r)return;const D=CD(),j=v6VJob(r),row=(n,v)=>`<div class="vr"><span>${E(n)}</span><b>${E(v==null||v===''?'—':String(v))}</b></div>`,f=(t,k,v)=>t=='date'&&v?fd(v):zNumK.has(k)&&v?zm(v):v,g=k=>CFF.find(a=>a[0]==k),R=k=>row(g(k)[1],f(g(k)[2],k,r.f[k])),iss=v6Issues(r),ser=v6Ser(r),np=+r.f.np||0,wp=+r.f.wp||0;
+ bigModal(`<div class="row"><h2 class="sp">${E(r.cid)} – ${E(r.f.name||'')}</h2><button class="sm" onclick="closeM()">Close</button></div><div class="row" style="margin:4px 0">${zst(r.f.st)}${zst(r.f.ws)}${wkTag6(j)}<span class="tag ${cfHave(r).length==cfNeed(r).length?'g':'s'}">Docs ${cfHave(r).length}/${cfNeed(r).length}</span></div>
+ <div class="vcard"><h3>Customer</h3><div class="vg">${R('name')}${R('mob')}${row('Address',r.f.addr)}${row('State / City',[r.state,r.city].filter(Boolean).join(' › '))}${R('cno')}${R('imm')}${R('date')}${row('Sales person',r.sales)}</div></div>
+ <div class="vcard"><h3>Work &amp; money</h3><div class="vg">${R('wby')}${R('kw')}${R('cost')}${R('subr')}${R('rem')}</div></div>
+ <div class="vcard"><h3>Panels &amp; inverter</h3><div class="vg">${row('Panels',[r.f.pm,np&&wp?np+' × '+wp+' Wp = '+(+(np*wp/1000).toFixed(2))+' kWp':(np||wp?(np||'—')+' × '+(wp||'—')+' Wp':'')].filter(Boolean).join(' · '))}${R('inv')}</div>${ser.length?`<div class="vg" style="margin-top:6px">${ser.map((s,i)=>row('PENAL '+(i+1),s)).join('')}</div>`:''}</div>
+ <div class="vcard"><h3>Meter &amp; subsidy</h3><div class="vg">${R('dis')}${R('mq')}${R('div')}${R('sub')}${R('idt')}${R('scl')}${R('srv')}${R('dcre')}${R('dcr')}</div></div>
+ ${r.l?`<div class="vcard"><h3>Loan</h3><div class="vg">${CFL.map(([k,n,t])=>row(n,f(t,k,r.l[k]))).join('')}</div></div>`:''}
+ <div class="vcard"><h3>Installation work</h3><div class="vg">${row('Material needed',needTxt(j))}${row('Fabrication',[JST[j.fabSt||'pending'],j.fabName||staffName(j.fabBy),j.fabDate&&fd(j.fabDate)].filter(Boolean).join(' · '))}${row('Wiring',[JST[j.wireSt||'pending'],j.wireName||staffName(j.wireBy),j.wireDate&&fd(j.wireDate)].filter(Boolean).join(' · '))}${row('Net meter',[j.meterSt,j.meterNo,j.meterDate&&fd(j.meterDate)].filter(Boolean).join(' · '))}${row('Commissioning',[j.comSt,j.comDate&&fd(j.comDate)].filter(Boolean).join(' · '))}</div></div>
+ <div class="vcard"><h3>Stock issued to this customer <span class="tag b">${iss.length}</span></h3><div class="issl">${iss.map(m=>{const i=G('items',m.item)||{name:'?',unit:''};return `<div class="it"><span><b>${m.qty} ${E(i.unit)}</b> ${E(i.name)} <span class="m">· ${fd(m.date)}${m.godown?' · from '+E(m.godown):''} · issued by ${E(staffName(m.by))} → ${E(staffName(m.to))}${m.extra?' · EXTRA':''}</span></span></div>`}).join('')||'<div class="m">Nothing issued yet.</div>'}</div></div>
+ <div class="vcard"><h3>Documents</h3>${(r.docs||[]).map((d,i)=>`<div class="it" style="padding:5px 0;border-bottom:1px solid var(--bd)"><span>${E(d.t)} – <span class="m">${E(d.n)}</span></span><button class="sm" onclick="cfShow('${r.id}',${i})">Open</button></div>`).join('')||'<div class="m">No documents saved.</div>'}</div>
+ <div class="row" style="margin-top:14px"><button class="btn nv" onclick="closeM();cfOpen('${r.id}')">Edit</button><button class="btn" onclick="closeM()">Close</button></div>`)}
+/* =========================================================
+   STOCK  –  issue by customer entry
+   ========================================================= */
+let MQ6='',MT6='';
+const v6Godowns=()=>[...new Set(['Main godown'].concat(L('moves').map(m=>m.godown).filter(Boolean)))];
+let V6CM={};
+function moveForm(type){const its=L('items');if(!its.length)return toast('Add a stock item first');const people=staffList().filter(u=>u.on!==false);IPH='';const gd=v6Godowns();
+ const common=`<datalist id="m_gl">${gd.map(g=>`<option value="${E(g)}">`).join('')}</datalist>`,photo=PHOTO_UI;
+ if(type=='in'){modal(`<h2>Receive stock</h2>${common}<label>Item<select id="m_i">${its.map(i=>`<option value="${i.id}">${E(i.name)} (${stockQty(i)} ${E(i.unit)})</option>`).join('')}</select></label><div class="r2"><label>Quantity<input id="m_q" type="number" step="any"></label><label>Date<input id="m_d" type="date" value="${today()}"></label></div><div class="r2"><label>Received from (supplier)<input id="m_t"></label><label>Into godown<input id="m_g" list="m_gl" value="${E(gd[0])}"></label></div><label>Note<input id="m_n"></label>${photo}<div class="row" style="margin-top:12px"><button class="btn pri sp" onclick="moveSave('in')">Save</button><button class="btn" onclick="closeM()">Cancel</button></div>`);return}
+ const cs=CU().sort((a,b)=>(a.f.name||'').localeCompare(b.f.name||''));V6CM={};cs.forEach(r=>{V6CM[`${r.f.name||'—'} · ${r.cid}${r.city?' · '+r.city:''}`]=r.id});
+ modal(`<h2>Issue stock to a customer</h2>${common}<datalist id="m_cl">${Object.keys(V6CM).map(k=>`<option value="${E(k)}">`).join('')}</datalist>
+ <div class="fs" style="margin-top:6px"><h3>Customer / site</h3><label>Customer (type name, mobile or file no. and pick)<input id="m_c" list="m_cl" autocomplete="off" oninput="v6PickCust()" placeholder="e.g. Patel · CF0012"></label><input type="hidden" id="m_cid"><div class="cinfo" id="m_ci"></div>
+  <label class="ck"><input id="m_oth" type="checkbox" onchange="$('m_oth_b').style.display=this.checked?'block':'none'"> Not for a customer (internal / other site)</label><div id="m_oth_b" style="display:none"><label>Where is it used?<input id="m_s" placeholder="Site / purpose"></label></div></div>
+ <div class="fs alt"><h3>Material</h3><label>Item<select id="m_i">${its.map(i=>`<option value="${i.id}">${E(i.name)} (${stockQty(i)} ${E(i.unit)})</option>`).join('')}</select></label><div class="r3"><label>Quantity<input id="m_q" type="number" step="any"></label><label>Date<input id="m_d" type="date" value="${today()}"></label><label>Use<select id="m_p"><option>Fabrication</option><option>Wiring</option><option>Other</option></select></label></div>
+  <label class="ck"><input id="m_x" type="checkbox"> Extra material (beyond the normal package material)</label><label>Reason (if extra)<input id="m_r"></label></div>
+ <div class="fs"><h3>Who &amp; from where</h3><div class="r3"><label>From godown<input id="m_g" list="m_gl" value="${E(gd[0])}"></label><label>Issued to (receives it)<select id="m_t">${people.map(u=>`<option value="${u.id}">${E(u.name)} – ${DEPTS[u.dept]}</option>`).join('')}</select></label><label>Issued by (stock staff)<input value="${E(ME.name)}" disabled></label></div><label>Note<input id="m_n"></label>${photo}</div>
+ <div class="row" style="margin-top:12px"><button class="btn pri sp" onclick="moveSave('out')">Save issue</button><button class="btn" onclick="closeM()">Cancel</button></div>`)}
+function v6PickCust(){const id=V6CM[val('m_c')],h=$('m_cid'),b=$('m_ci');if(h)h.value=id||'';if(!b)return;const r=id&&G('files',id);if(!r){b.className='cinfo';b.innerHTML='';return}
+ const j=v6VJob(r),iss=v6Issues(r),sp=r.sales||j.salesBy||'—',np=+r.f.np||0,wp=+r.f.wp||0;
+ b.className='cinfo on';b.innerHTML=`<div class="gr"><div><span>Customer</span><b>${E(r.f.name)}</b> · ${E(r.cid)}</div><div><span>Mobile</span>${E(r.f.mob||'—')}</div><div><span>Sales person</span><b>${E(sp)}</b></div><div><span>System</span>${r.f.kw?E(r.f.kw)+' kW':'—'}${np?' · '+np+' × '+(wp||'—')+' Wp':''}</div></div><div style="margin-top:6px"><span style="font-size:11px;text-transform:uppercase;color:var(--mut)">Site address</span><br><b>${E([r.f.addr,r.city].filter(Boolean).join(', ')||'—')}</b></div>${needTxt(j)?`<div class="m" style="margin-top:4px">Needs: ${E(needTxt(j))}</div>`:''}${iss.length?`<div class="m" style="margin-top:4px">Already issued: ${iss.slice(0,4).map(m=>`${m.qty} ${E((G('items',m.item)||{}).name||'?')}`).join(' · ')}${iss.length>4?' …':''}</div>`:''}`}
+async function moveSave(type){const it=G('items',val('m_i')),q=+val('m_q');if(!it)return toast('Choose the item');if(!(q>0))return toast('Enter the quantity');if(type=='out'&&q>stockQty(it))return toast('Only '+stockQty(it)+' '+it.unit+' in the godown');
+ const m={id:uid(),ts:nowT(),date:val('m_d')||today(),type,item:it.id,qty:q,to:val('m_t'),by:ME.id,byName:ME.name,note:val('m_n'),img:IPH,godown:val('m_g').trim()};
+ if(type=='out'){const oth=$('m_oth')&&$('m_oth').checked;if(!oth){const r=G('files',val('m_cid'));if(!r)return toast('Choose the customer from the list (or tick "Not for a customer")');const j=v6VJob(r);Object.assign(m,{cust:r.id,cid:r.cid,site:r.f.name,addr:[r.f.addr,r.city].filter(Boolean).join(', '),mob:r.f.mob||'',sales:r.sales||j.salesBy||''})}
+  else{m.site=val('m_s').trim();if(!m.site)return toast('Enter where the material is used');m.addr=m.site}
+  m.purpose=val('m_p');m.extra=$('m_x').checked;m.reason=val('m_r').trim()}
+ await stSet('moves',m.id,m);await act((type=='in'?'Received ':'Issued ')+q+' '+it.unit+' '+it.name+(type=='out'?' to '+staffName(m.to)+' for '+m.site+(m.godown?' from '+m.godown:'')+(m.extra?' [EXTRA]':''):' into '+(m.godown||'godown')));closeM();draw();toast('Saved ✓')}
+function mvRows6(){return L('moves').filter(m=>inRange(m.date)&&(!MT6||m.type==MT6)).filter(m=>has6([(G('items',m.item)||{}).name,m.site,m.cid,m.addr,m.godown,m.sales,staffName(m.by),m.byName,m.type=='out'?staffName(m.to):m.to,m.purpose,m.note,m.reason],MQ6)).sort((a,b)=>(b.ts||'').localeCompare(a.ts||''))}
+function mvTbl6(){const ms=mvRows6(),out=ms.filter(m=>m.type=='out');
+ return `<div class="zs"><span><b>${ms.length}</b>entries</span><span><b>${out.length}</b>issued</span><span><b>${new Set(out.map(m=>m.cust||m.site)).size}</b>customers / sites</span><span><b>${out.filter(m=>m.extra).length}</b>extra</span></div>${HINT6}<div class="xl"><table class="xt"><thead><tr><th class="k k1">#</th><th class="w2">Date</th><th class="w4">Item</th><th class="w2">Qty</th><th class="k kn" style="position:static">Customer / site</th><th class="wrap">Site address</th><th class="w3">From godown</th><th class="w3">Issued to</th><th class="w3">Issued by</th><th class="w3">Sales person</th><th class="w2">Use</th><th class="wrap2">Note / reason</th></tr></thead><tbody>${ms.map((m,i)=>{const it=G('items',m.item)||{name:'?',unit:''},o=m.type=='out';
+  return `<tr><td class="k k1">${i+1}</td><td class="w2">${fd(m.date)}</td><td class="w4">${m.img?`<img src="${m.img}" onclick="imgView(this.src)" style="width:30px;height:30px;object-fit:cover;border-radius:6px;vertical-align:middle;margin-right:6px;cursor:pointer">`:''}${E(it.name)}</td><td class="w2"><b class="${o?'up':'dn'}">${o?'−':'+'}${m.qty} ${E(it.unit)}</b></td><td class="kn" style="position:static;border-right:0;max-width:260px">${o?`<b>${E(m.site||'—')}</b>${m.cid?`<div class="sm2">${E(m.cid)}${m.mob?' · '+E(m.mob):''}</div>`:''}`:`<span class="m">Supplier:</span> ${E(m.to||'—')}`}</td><td class="wrap">${o?E(m.addr||''):''}</td><td class="w3">${E(m.godown||'')}</td><td class="w3">${o?E(staffName(m.to)):''}</td><td class="w3">${E(m.byName||staffName(m.by))}</td><td class="w3">${E(m.sales||'')}</td><td class="w2">${o?E(m.purpose||''):''}${m.extra?' <i class="tag r">EXTRA</i>':''}</td><td class="wrap2">${E([m.note,m.reason].filter(Boolean).join(' · '))}</td></tr>`}).join('')||'<tr><td colspan="12" class="m" style="padding:26px">No movements in this period.</td></tr>'}</tbody></table></div>`}
+function mvFill6(){const b=$('mv_box');if(b)b.innerHTML=mvTbl6()}
+movesHtml=function(){return `<h3>Movements</h3>${rangeBar()}<div class="card"><div class="tb6"><label>Search<input placeholder="Customer / item / staff / godown / site…" value="${E(MQ6)}" oninput="MQ6=this.value;mvFill6()"></label><label>Type<select onchange="MT6=this.value;mvFill6()"><option value="">Issued + received</option><option value="out" ${MT6=='out'?'selected':''}>Issued only</option><option value="in" ${MT6=='in'?'selected':''}>Received only</option></select></label></div></div><div id="mv_box">${mvTbl6()}</div>`};
+/* =========================================================
+   DASHBOARD
+   ========================================================= */
+const v6Month=d=>String(d||'').slice(0,7),MN6=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function v6Cols2(labels,vals,color,unit){const W=420,H=190,l=30,r=8,t=14,b=26,mx=Math.max(1,...vals),n=labels.length,bw=(W-l-r)/n*.58,X=i=>l+(W-l-r)*(i+.5)/n;
+ const grid=[0,1,2,3].map(i=>{const v=mx*i/3,y=t+(H-t-b)*(1-v/mx);return `<line x1="${l}" x2="${W-r}" y1="${y}" y2="${y}" stroke="#e6ebf0"/><text x="${l-5}" y="${y+4}" text-anchor="end" font-size="10" fill="#7b8794">${Math.round(v)}</text>`}).join('');
+ const bars=vals.map((v,i)=>{const h=(H-t-b)*v/mx;return `<rect x="${X(i)-bw/2}" y="${H-b-h}" width="${bw}" height="${h}" rx="4" fill="${color}"/>${v?`<text x="${X(i)}" y="${H-b-h-4}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#33414e">${+v.toFixed(1)}</text>`:''}<text x="${X(i)}" y="${H-8}" text-anchor="middle" font-size="10" fill="#7b8794">${labels[i]}</text>`}).join('');
+ return `<svg class="vcol" viewBox="0 0 ${W} ${H}">${grid}${bars}</svg>`}
+const v6Fun=(rows,colors)=>{const mx=Math.max(1,...rows.map(r=>r[1]));return rows.map(([k,n],i)=>`<div class="fun"><span>${E(k)}</span><div><u style="width:${Math.max(n?3:0,n/mx*100)}%;background:${colors[i%colors.length]}"></u></div><b>${n}</b></div>`).join('')};
+VIEWS.dash=()=>{const s=stats(),D=CD(),all=CU().filter(zGeoRec),act=!!(CFQ.s||CFQ.c),gf=L('files').filter(f=>!act||zGeoRec(f)),qv=s.quotes.reduce((t,q)=>t+(+q.final||0),0),done=f=>f.status=='complete'||f.status=='submitted',
+ pend=gf.filter(f=>!done(f)).length,T=today(),open=s.leads.filter(l=>OPEN.includes(l.status)),due=open.filter(l=>l.followDate&&l.followDate<=T).length,low=stockLow(),
+ sum=k=>all.reduce((t,r)=>t+(+r.f[k]||0),0),kw=sum('kw'),cost=sum('cost'),subr=sum('subr'),
+ K=(a,b,c,sub)=>`<div class="zk ${c||''}"><span>${b}</span><b>${a}</b>${sub?`<em>${sub}</em>`:'<em>&nbsp;</em>'}</div>`,
+ al=(n,t,v)=>`<a class="zal ${n?'hot':''}" onclick="VIEW='${v}';shell()"><span>${t}</span><b>${n}</b></a>`,
+ selB=s.by(s.quotes,q=>q.by),fileB=s.by(s.files,f=>f.salesId||'—'),
+ scope=act?(CFQ.c?CFQ.s+' › '+CFQ.c:CFQ.s):'All states and cities',
+ stOrd=D.st.map(x=>[x,all.filter(r=>r.f.st==x).length]).concat([['(no status)',all.filter(r=>!r.f.st).length]]).filter(x=>x[1]||D.st.includes(x[0])),
+ mths=[...Array(6)].map((_,i)=>{const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-5+i);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}),
+ mKw=mths.map(m=>all.filter(r=>v6Month(r.f.idt)==m).reduce((t,r)=>t+(+r.f.kw||0),0)),mN=mths.map(m=>all.filter(r=>v6Month(r.f.idt)==m).length),
+ lfun=Object.keys(LST).map(k=>[LST[k],s.leads.filter(l=>l.status==k).length]),
+ ages=open.map(l=>hrs(l)),a1=ages.filter(h=>h<24).length,a2=ages.filter(h=>h>=24&&h<48).length,a3=ages.filter(h=>h>=48&&h<72).length,a4=ages.filter(h=>h>=72).length,
+ outs=s.moves.filter(m=>m.type=='out'),byItem=Object.entries(s.by(outs,m=>(G('items',m.item)||{name:'?'}).name)).map(([k,a])=>[k,+a.reduce((t,m)=>t+(+m.qty||0),0).toFixed(1)]).sort((a,b)=>b[1]-a[1]).slice(0,6),
+ byCust=Object.entries(s.by(outs,m=>m.site||'—')).map(([k,a])=>[k,a.length]).sort((a,b)=>b[1]-a[1]).slice(0,6),
+ mvB=s.by(outs,m=>m.by||'—'),PL=['#2b7f3e','#d9a21f','#2f6fb5','#c0392b','#7a5cc4','#16909a','#e07b39','#7f8c9a','#c2527f'];
+ $('main').innerHTML=`<div class="hero"><div><div class="hk">SURYAZEN SOLAR · COMPANY OVERVIEW</div><h2>Dashboard</h2><div class="hs">${E(scope)} · ${rangeBounds().map(fd).join(' – ')}</div></div><button class="hb" onclick="dayReport()">End-of-day report</button></div>
+ <div class="flt">${rangeBar()}${geoBar()}</div>
+ <div class="dg"><div class="dm"><div class="zks">${K(all.length,'Customers','','Total in file')}${K(+kw.toFixed(1)+' kW','Capacity','', 'Sum of all customers')}${K(inr(cost),'Project value','y','Subsidy received '+inr(subr))}${K(pend,'Documents pending','r','Files not complete')}
+ ${K(s.calls.length,'Calls made','b',s.calls.filter(c=>c.outcome=='interested').length+' interested')}${K(open.length,'Open leads','b',due+' follow-up due')}${K(s.quotes.length,'Quotations','y',inr(qv))}${K(low.length,'Low stock items','r',outs.length+' issues this period')}</div>
+ <div class="g21">${zTrend()}${zDonut(zGrp(all,r=>r.f.st),'Customer status')}</div>
+ <div class="g3"><div class="card"><div class="ch"><h4>Customer pipeline</h4></div>${v6Fun(stOrd,PL)||'<div class="m">No data.</div>'}</div>
+  <div class="card"><div class="ch"><h4>Installations – last 6 months (kW)</h4></div>${mKw.some(x=>x)?v6Cols2(mths.map(m=>MN6[+m.slice(5)-1]),mKw,'#2b7f3e'):'<div class="m" style="padding:30px 0">No installation dates entered yet.</div>'}<div class="m">${mN.reduce((a,b)=>a+b,0)} installations in this window</div></div>
+  <div class="card"><div class="ch"><h4>Lead funnel</h4></div>${v6Fun(lfun,['#2f6fb5','#2f6fb5','#7a5cc4','#7a5cc4','#d9a21f','#d9a21f','#d9a21f','#2b7f3e','#2b7f3e','#c0392b'])}</div></div>
+ <div class="g3">${zDonut(zGrp(all,r=>r.f.ws),'Work status')}${zBars(!CFQ.s?zGrp(all,r=>r.state):!CFQ.c?zGrp(all,r=>r.city):zGrp(all,r=>r.f.wby),!CFQ.s?'Customers by state':!CFQ.c?'Customers by city':'Customers by work-by')}${zBars(zGrp(all.filter(r=>r.l),r=>r.l.app),'Loan files by bank')}</div>
+ <div class="two"><div class="card"><div class="ch"><h4>Pending leads – how long waiting</h4><a class="m" style="cursor:pointer" onclick="VIEW='pend';shell()">Open list →</a></div><div class="age"><div class="a1"><b>${a1}</b><span>under 24h</span></div><div class="a2"><b>${a2}</b><span>1 – 2 days</span></div><div class="a3"><b>${a3}</b><span>2 – 3 days</span></div><div class="a4"><b>${a4}</b><span>3 days +</span></div></div></div>
+  <div class="card"><div class="ch"><h4>Low stock</h4><a class="m" style="cursor:pointer" onclick="VIEW='stock';shell()">Open stock →</a></div>${low.slice(0,6).map(i=>`<div class="it" style="padding:5px 0;border-bottom:1px solid var(--bd)"><span>${E(i.name)}</span><b style="color:var(--rd)">${stockQty(i)} / min ${i.min} ${E(i.unit)}</b></div>`).join('')||'<div class="m">All items above minimum.</div>'}</div></div>
+ <div class="two">${zBars(byItem,'Stock issued – top items (qty)')}${zBars(byCust,'Stock issued – top customers / sites (entries)')}</div>
+ <div class="two">${zTb('Calling',['Caller','Calls','Interested','Genuine'],Object.entries(s.by(s.calls,c=>c.by)).map(([k,a])=>[E(staffName(k)),a.length,a.filter(c=>c.outcome=='interested').length,a.filter(c=>c.genuine).length]),'No calls in this period.')}
+ ${zTb('Sales team',['Name','Leads','Following','Accepted','Rejected','Quotes','Value'],staffBy('sales').map(u=>{const ls=s.leads.filter(l=>l.assignedTo==u.id),q=selB[u.id]||[];return[E(u.name),ls.filter(l=>inRange(l.date)).length,ls.filter(l=>l.status=='following'||l.status=='new').length,ls.filter(l=>l.status=='agreed').length,ls.filter(l=>l.status=='lost').length,q.length,inr(q.reduce((t,x)=>t+(+x.final||0),0))]}),'No sales staff yet.')}
+ ${zTb('Documents by salesperson',['Brought by','Files','Complete','Pending'],Object.entries(fileB).map(([k,a])=>[E(staffName(k)),a.length,a.filter(done).length,a.filter(f=>!done(f)).length]),'No files in this period.')}
+ ${zTb('Stock issued by staff',['Issued by','Entries','Extra'],Object.entries(mvB).map(([k,a])=>[E(staffName(k)),a.length,a.filter(m=>m.extra).length]),'Nothing issued in this period.')}
+ ${zTb('Fabrication and wiring',['Member','Work','Pending','In progress','Done'],[...staffBy('fab').map(u=>[u,'fab']),...staffBy('wire').map(u=>[u,'wire'])].map(([u,k])=>{const js=s.jobs.filter(j=>j[k+'By']==u.id),c=t=>js.filter(j=>(j[k+'St']||'pending')==t).length;return[E(u.name),DEPTS[k],c('pending'),c('progress'),c('done')]}),'No team members yet.')}</div></div>
+ <aside class="dr"><div class="card"><h4>Needs attention</h4>${al(due,'Follow-ups due / overdue','leads')}${al(a4,'Leads waiting 3 days +','pend')}${al(pend,'Pending documents','cf')}${al(low.length,'Items below minimum stock','stock')}</div>
+ <div class="card"><h4>Quick actions</h4><div class="row"><button class="sm pri" onclick="VIEW='cf';shell();cfOpen()">+ Customer</button><button class="sm nv" onclick="moveForm('out')">Issue stock</button><button class="sm" onclick="VIEW='leads';shell()">Leads</button><button class="sm" onclick="VIEW='set';shell()">States &amp; cities</button></div></div>
+ <div class="card"><h4>Latest activity</h4>${s.acts.sort((a,b)=>b.ts.localeCompare(a.ts)).slice(0,20).map(a=>`<div class="it" style="padding:5px 0;border-bottom:1px solid var(--bd);align-items:flex-start"><span style="font-size:13px"><i class="tag b">${DEPTS[a.dept]||a.dept||'—'}</i> ${E(a.name)} – ${E(a.text)}</span><span class="m">${new Date(a.ts).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</span></div>`).join('')||'<div class="m">No activity in this period.</div>'}</div></aside></div>`};
+/* ---- card lists flow into a grid in admin + staff panels ---- */
+const RG6=new Set(['staff','plist','myq','quotes','myjobs','visits','visit','fwd','leave','myleave']);
+const _dr6=draw;draw=function(){_dr6();const m=$('main');if(m)m.classList.toggle('rg',RG6.has(VIEW))};
+if(typeof ME!=='undefined'&&ME&&$('app')&&$('main')){try{shell()}catch(e){}}
+</script>
+
 </body></html>
