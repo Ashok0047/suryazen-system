@@ -1934,6 +1934,14 @@ select option:checked{background:#e6f1e0;color:#1f5a14}
  .geo .grw{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}
  .geo .gp{flex:0 0 auto}
 }
+
+/* v8: serial boxes, column resize + manager */
+.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px 10px;margin:6px 0}
+.sgi{margin:2px 0}.sgi span{font-size:10.5px;letter-spacing:.04em;color:var(--mut)}.sgi input{margin-top:2px;padding:7px 9px}
+.v8rz{position:absolute;top:0;right:0;width:10px;height:100%;cursor:col-resize;touch-action:none;z-index:5}
+.v8rz:hover,.v8rz.on{background:#f4b517b0}
+.v8l{max-height:52vh;overflow:auto}.v8r{display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid var(--bd)}
+.v8r label.ck{flex:1;margin:0;min-width:0}.v8r input.v8w{width:84px;margin:0;padding:5px 8px}
 </style>
 
 <script>
@@ -1943,15 +1951,17 @@ select option:checked{background:#e6f1e0;color:#1f5a14}
  if(!CFF.some(a=>a[0]=='ssub'))CFF.splice(i,0,['ssub','STATE SUBSIDY','num']);
  CFF.find(a=>a[0]=='subr')[1]='CENTRAL GOVT SUBSIDY';
  if(!CFF.some(a=>a[0]=='pay')){const j=CFF.findIndex(a=>a[0]=='subr');CFF.splice(j+1,0,['pay','CUSTOMER PAYABLE (AFTER SUBSIDY)','num'])}
- zNumK.add('ssub');zNumK.add('pay')})();
+ if(!CFF.some(a=>a[0]=='wsub')){const j=CFF.findIndex(a=>a[0]=='pay');CFF.splice(j+1,0,['wsub','PAYMENT WITH SUBSIDY','num'])}
+  zNumK.add('ssub');zNumK.add('pay');zNumK.add('wsub')})();
 const v7N=v=>{const n=parseFloat(String(v??'').replace(/[^\d.\-]/g,''));return isNaN(n)?0:n};
 const v7Em=v=>v==null||String(v).trim()==='';
 /* Indian digit grouping while typing: 210000 -> 2,10,000 */
 const v7Fmt=raw=>{raw=String(raw??'').replace(/[^\d.]/g,'');if(!raw)return '';let [i,d]=raw.split('.');i=i.replace(/^0+(?=\d)/,'');let last=i.slice(-3),rest=i.slice(0,-3);if(rest)last=rest.replace(/\B(?=(\d{2})+(?!\d))/g,',')+','+last;return last+(d!==undefined?'.'+d.slice(0,2):'')};
 const v7Pay=r=>{const f=r.f||{};if(v7Em(f.cost)&&v7Em(f.ssub)&&v7Em(f.subr))return '';return v7N(f.cost)-v7N(f.ssub)-v7N(f.subr)};
+const v7With=r=>{const f=r.f||{};return v7Em(f.cost)?'':v7N(f.cost)};
 const v7Cap=r=>{const np=+r.f.np||0,wp=+r.f.wp||0;return np&&wp?+(np*wp/1000).toFixed(2):(r.f.kw||'')};
 /* capacity comes from panels × watt; payable is stored so Excel / cloud copy stay in step */
-function v7Norm(r){const f=r.f=r.f||{},np=+f.np||0,wp=+f.wp||0;if(np>0&&wp>0)f.kw=String(+(np*wp/1000).toFixed(2));const p=v7Pay(r);f.pay=p===''?'':String(p);return r}
+function v7Norm(r){const f=r.f=r.f||{},np=+f.np||0,wp=+f.wp||0;if(np>0&&wp>0)f.kw=String(+(np*wp/1000).toFixed(2));const p=v7Pay(r);f.pay=p===''?'':String(p);const w=v7With(r);f.wsub=w===''?'':String(w);return r}
 const v7Pend=r=>cfNeed(r).filter(t=>!(r.docs||[]).some(d=>d.t==t));
 let V7TAB='all',V7FO=false,V7PAN=Math.max(12,+(lsG('sz_pancols')||12));
 const v7PanN=rows=>Math.max(12,V7PAN,...rows.map(r=>v6Ser(r).length));
@@ -1969,26 +1979,27 @@ const v7Fil=()=>v6Fil();
 
 /* ---- columns: ALL customers (loan fields are NOT mixed in; only a LOAN badge) ---- */
 const v7T0=t=>t=='dd'?'dd':t=='num'?'num':t=='date'?'date':t=='tel'?'tel':'text';
-function v7CustCols(rows){const D=CD(),cols=[],CPS=new Set(['imm','date','wby','st','ws','name','addr','mob','cost','pay','rem']);
+function v7CustCols(rows){const D=CD(),cols=[],CPS=new Set(['imm','date','wby','st','ws','name','addr','mob','cost','ssub','subr','pay','wsub','rem']);
  const mk=(k,n,t,l)=>{const tt=v7T0(t);return{n,c:CPS.has(k),cls:{addr:'wrap',rem:'wrap2'}[k]||'',r:r=>{const v=r.f[k];if(v==null||v==='')return '';return tt=='date'?zdt(v):zNumK.has(k)?zm(v):(k=='st'||k=='ws')?zst(v):E(v)},e:{t:tt,o:tt=='dd'?D[l]:null,req:k=='name',get:r=>r.f[k],set:(r,v)=>{r.f[k]=v}}}};
  cols.push({n:'FILE',c:1,cls:'k kn',r:r=>`<b>${E(r.cid)}</b><div class="sm2">${E(r.city||'')}</div>`});
- CFF.forEach(([k,n,t,l])=>{
-  if(k=='wp')return;
+ const loanCol={n:'LOAN',c:1,cls:'',r:r=>r.l?`<i class="tag ln">YES</i> ${E([r.l.app,r.l.lst].filter(Boolean).join(' · '))}`:'<i class="tag">No</i>',e:{t:'dd',o:()=>[['y','Yes'],['n','No']],get:r=>r.l?'y':'n',set:(r,v)=>v8LoanSet(r,v=='y')}};
+  CFF.forEach(([k,n,t,l])=>{
+  if(k=='wp'||k=='inv')return;
   if(k=='kw')cols.push({n:'CAPACITY',c:0,cls:'',r:r=>{const c=v7Cap(r);return c===''?'':E(c)+' kW'}});
   else if(k=='np')cols.push({n:'PANELS (Nos × Wp)',c:1,cls:'tx',open:1,r:v6Pnl});
-  else if(k=='pay')cols.push({n:'PAYABLE (AFTER SUBSIDY)',c:1,cls:'',r:r=>{const p=v7Pay(r);return p===''?'':'<b>'+zm(p)+'</b>'}});
-  else cols.push(mk(k,n,t,l))});
- const N=v7PanN(rows),mx=Math.max(0,...rows.map(r=>v6Ser(r).length));
- for(let i=0;i<N;i++)cols.push({n:'PENAL '+(i+1),c:0,cls:'',r:r=>E(v6Ser(r)[i]||''),e:{t:'text',get:r=>v6Ser(r)[i]||'',set:(r,v)=>{const a=v6Ser(r);while(a.length<=i)a.push('');a[i]=v.trim();while(a.length&&!a[a.length-1])a.pop();r.f.pan=a.join('\n')}}});
- cols.push({n:'',c:0,cls:'',hcls:'pxh',hdr:`<button class="pxb" onclick="v7PanAdd()" title="Add one more panel column">+ Panel</button>${N>12&&N>mx?'<button class="pxb" onclick="v7PanSub()" title="Remove the last empty panel column">−</button>':''}`,r:()=>''});
+  else if(k=='pay')cols.push({n:'PAYMENT AFTER SUBSIDY',c:1,cls:'',r:r=>{const p=v7Pay(r);return p===''?'':'<b>'+zm(p)+'</b>'}});
+  else if(k=='wsub')cols.push({n:'PAYMENT WITH SUBSIDY',c:1,cls:'',r:r=>{const p=v7With(r);return p===''?'':'<b>'+zm(p)+'</b>'}});
+   else{cols.push(mk(k,n,t,l));if(k=='wby')cols.push(loanCol)}});
  cols.push({n:'STATE',c:0,cls:'',r:r=>E(r.state),e:{t:'dd',o:()=>Object.keys(D.states),get:r=>r.state,set:(r,v)=>{r.state=v;if(!(D.states[v]||[]).includes(r.city))r.city=''}}});
  cols.push({n:'CITY',c:0,cls:'',r:r=>E(r.city),e:{t:'dd',o:r=>D.states[r.state]||[],get:r=>r.city,set:(r,v)=>{r.city=v}}});
  cols.push({n:'SALES PERSON',c:1,cls:'',r:r=>E(r.sales||''),e:{t:'dd',o:()=>SALESN6(),get:r=>r.sales||'',set:(r,v)=>{r.sales=v}}});
  cols.push({n:'DOCS',c:1,cls:'',r:r=>{const a=cfNeed(r).length,p=v7Pend(r);return `<i class="tag ${p.length?'s':'g'}">${a-p.length}/${a}</i>${p.length?`<span class="pdn">Pending: ${E(p.join(', '))}</span>`:''}`}});
- cols.push({n:'LOAN',c:1,cls:'',r:r=>r.l?`<i class="tag ln">LOAN</i> ${E([r.l.app,r.l.lst].filter(Boolean).join(' · '))}`:''});
- cols.push({n:'INSTALL WORK',c:1,cls:'',r:r=>{const j=v6VJob(r);return wkTag6(j)+' '+JBSTEPS.map((n,k)=>`<button class="stp ${stepDone(j,k+1)?'on':''}" title="${E(n)}" onclick="event.stopPropagation();v6Work('${r.id}',${k+1})">${k+1}</button>`).join('')}});
  cols.push({n:'MATERIAL NEEDED',c:0,cls:'wrap2',r:r=>E(needTxt(v6VJob(r))||'')});
- D.fields.filter(f=>f.sec!='l').forEach(f=>cols.push({n:f.n,c:0,cls:'',r:r=>E((r.x||{})[f.k]??''),e:{t:v7T0(f.t),o:f.t=='dd'?D['x_'+f.k]:null,get:r=>(r.x||{})[f.k],set:(r,v)=>{r.x=r.x||{};r.x[f.k]=v}}}));
+ D.fields.filter(f=>f.sec!='l').forEach(f=>cols.push({n:f.n,fk:f.k,c:0,cls:'',r:r=>E((r.x||{})[f.k]??''),e:{t:v7T0(f.t),o:f.t=='dd'?D['x_'+f.k]:null,get:r=>(r.x||{})[f.k],set:(r,v)=>{r.x=r.x||{};r.x[f.k]=v}}}));
+  const iv=mk('inv','INVERTER SERIAL NO.','text');iv.c=1;cols.push(iv);
+ const N=v7PanN(rows),mx=Math.max(0,...rows.map(r=>v6Ser(r).length));
+ for(let i=0;i<N;i++)cols.push({n:'PENAL '+(i+1),c:1,cls:'',r:r=>E(v6Ser(r)[i]||''),e:{t:'text',get:r=>v6Ser(r)[i]||'',set:(r,v)=>{const a=v6Ser(r);while(a.length<=i)a.push('');a[i]=v.trim();while(a.length&&!a[a.length-1])a.pop();r.f.pan=a.join('\n')}}});
+ cols.push({n:'',c:0,cls:'',hcls:'pxh',hdr:`<button class="pxb" onclick="v7PanAdd()" title="Add one more panel column">+ Panel</button>${N>12&&N>mx?'<button class="pxb" onclick="v7PanSub()" title="Remove the last empty panel column">−</button>':''}`,r:()=>''});
  return cols}
 
 /* ---- columns: LOAN tab (customer basics + every loan field, separate from the main file) ---- */
@@ -2004,16 +2015,16 @@ function v7LoanCols(){const D=CD(),cols=[],cl=k=>CFL.find(a=>a[0]==k),cf=k=>CFF.
  ['lgd','ly'].forEach(k=>cols.push(L1(k)));
  cols.push({n:'PROJECT AMT',c:1,cls:'',r:r=>zm(r.f.cost)});
  ['lamt','lrem','sa','sd','da','dd','t1','t1d','t2','t2d','mail'].forEach(k=>{const c=L1(k);if(k=='lrem')c.cls='wrap2';c.c=['lamt','lrem','sa','da'].includes(k)?1:0;cols.push(c)});
- D.fields.filter(f=>f.sec=='l').forEach(f=>cols.push({n:f.n,c:0,cls:'',r:r=>E((r.x||{})[f.k]??''),e:{t:v7T0(f.t),o:f.t=='dd'?D['x_'+f.k]:null,get:r=>(r.x||{})[f.k],set:(r,v)=>{r.x=r.x||{};r.x[f.k]=v}}}));
+ D.fields.filter(f=>f.sec=='l').forEach(f=>cols.push({n:f.n,fk:f.k,c:0,cls:'',r:r=>E((r.x||{})[f.k]??''),e:{t:v7T0(f.t),o:f.t=='dd'?D['x_'+f.k]:null,get:r=>(r.x||{})[f.k],set:(r,v)=>{r.x=r.x||{};r.x[f.k]=v}}}));
  cols.push({n:'DOCS',c:1,cls:'',r:r=>{const a=cfNeed(r).length,p=v7Pend(r);return `<i class="tag ${p.length?'s':'g'}">${a-p.length}/${a}</i>${p.length?`<span class="pdn">Pending: ${E(p.join(', '))}</span>`:''}`}});
  return cols}
 
 let V7C=[];
-const v7Cells=(r,i)=>`<td class="k k1">${i+1}</td>`+V7C.map((c,x)=>(CFALL||c.c)?`<td class="${c.cls||''}${c.e?' ed':''}" data-c="${x}"${c.open?` onclick="cfOpen('${r.id}')"`:''}>${c.r(r)}</td>`:'').join('')+`<td class="k ka"><div class="ab"><button class="sm" onclick="cfView('${r.id}')">View</button><button class="sm nv" onclick="cfOpen('${r.id}')">Edit</button>${ME.admin?`<button class="sm dg" onclick="cfDelId('${r.id}')">Delete</button>`:''}</div></td>`;
+const v7Cells=(r,i)=>`<td class="k k1">${i+1}</td>`+V7C.map((c,x)=>v8Vis(c)?`<td class="${c.cls||''}${c.e?' ed':''} ${c.cl||''}" data-c="${x}"${c.open?` onclick="cfOpen('${r.id}')"`:''}>${c.r(r)}</td>`:'').join('')+`<td class="k ka"><div class="ab"><button class="sm" onclick="cfView('${r.id}')">View</button><button class="sm nv" onclick="cfOpen('${r.id}')">Edit</button>${ME.admin?`<button class="sm dg" onclick="cfDelId('${r.id}')">Delete</button>`:''}</div></td>`;
 const v7Sum=a=>{const S=k=>a.reduce((t,r)=>t+(+r.f[k]||0),0),kp=a.reduce((t,r)=>t+(+v7Cap(r)||0),0),SL=k=>a.reduce((t,r)=>t+((r.l&&+r.l[k])||0),0),M=n=>zm(n)||'₹ 0',dp=a.filter(r=>v7Pend(r).length).length;
  if(V7TAB=='loan')return `<span><b>${a.length}</b>loan customers</span><span><b>${M(SL('lamt'))}</b>loan amount</span><span><b>${M(SL('sa'))}</b>sanctioned</span><span><b>${M(SL('da'))}</b>disbursed</span><span><b>${dp}</b>docs pending</span>`;
- return `<span><b>${a.length}</b>customers</span><span><b>${+kp.toFixed(1)}</b>kW capacity</span><span><b>${M(S('cost'))}</b>project cost</span><span><b>${M(S('ssub'))}</b>state subsidy</span><span><b>${M(S('subr'))}</b>central subsidy</span><span><b>${M(a.reduce((t,r)=>t+(+v7Pay(r)||0),0))}</b>customer payable</span><span><b>${a.filter(r=>r.l).length}</b>with loan</span><span><b>${dp}</b>docs pending</span><span><b>${a.filter(r=>jobStat(v6VJob(r))!='Complete').length}</b>work pending</span>`};
-const v7Save=async(r,lab)=>{v7Norm(r);r.upd=nowT();await cfPut(r);try{await v6SyncJob(r,false)}catch(x){}if(SSD)try{cfDetails(r)}catch(x){}try{act('Customer '+r.cid+' updated: '+lab)}catch(x){}};
+ return `<span><b>${a.length}</b>customers</span><span><b>${+kp.toFixed(1)}</b>kW capacity</span><span><b>${M(S('cost'))}</b>project cost</span><span><b>${M(S('ssub'))}</b>state subsidy</span><span><b>${M(S('subr'))}</b>central subsidy</span><span><b>${M(a.reduce((t,r)=>t+(+v7With(r)||0),0))}</b>payment with subsidy</span><span><b>${M(a.reduce((t,r)=>t+(+v7Pay(r)||0),0))}</b>payment after subsidy</span><span><b>${a.filter(r=>r.l).length}</b>with loan</span><span><b>${dp}</b>docs pending</span><span><b>${a.filter(r=>jobStat(v6VJob(r))!='Complete').length}</b>work pending</span>`};
+const v7Save=async(r,lab)=>{v7Norm(r);r.upd=nowT();await cfPut(r);try{const e=document.querySelectorAll('.v7tabs em');if(e.length>1){e[0].textContent=CU().length;e[1].textContent=CU().filter(x=>x.l).length}}catch(x){}try{await v6SyncJob(r,false)}catch(x){}if(SSD)try{cfDetails(r)}catch(x){}try{act('Customer '+r.cid+' updated: '+lab)}catch(x){}};
 zTbl.cf={rec:id=>G('files',id),cols:()=>V7C,cells:v7Cells,sum:()=>{const e=$('cf_sum');if(e)e.innerHTML=v7Sum(v7Fil())},save:v7Save};
 zTbl.loan={rec:id=>G('files',id),cols:()=>V7C,cells:v7Cells,sum:()=>{const e=$('cf_sum');if(e)e.innerHTML=v7Sum(v7Fil())},save:v7Save};
 
@@ -2023,16 +2034,16 @@ const v7Card=r=>{const a=cfNeed(r).length,p=v7Pend(r),pay=v7Pay(r),np=+r.f.np||0
  const loanBox=L?`<div class="cc-l"><b>LOAN</b> · ${E(L.app||'—')} · ${L.lst?zst(L.lst):'—'}${L.lamt?' · <b>'+zm(L.lamt)+'</b>':''}${V7TAB=='loan'?`<div class="m" style="margin-top:4px">${[L.lwby&&'Work by '+L.lwby,L.sa&&'Sanction '+zm(L.sa),L.da&&'Disbursed '+zm(L.da),L.lgd&&'Login '+fd(L.lgd)].filter(Boolean).map(E).join(' · ')}</div>`:''}</div>`:'';
  return `<div class="cc"><div class="cc-h"><div><b>${E(r.cid)}</b><span class="m">· ${E(r.city||'')}</span></div><div class="cc-tags">${L?'<i class="tag ln">LOAN</i>':''}${zst(r.f.st)}${zst(r.f.ws)}</div></div>
  <div class="cc-n">${E(r.f.name||'—')}</div>
- <div class="cc-g"><div><span>Mobile</span>${E(r.f.mob||'—')}</div><div><span>Panels / capacity</span>${pn||'—'}</div><div><span>Project cost</span>${zm(r.f.cost)||'—'}</div><div class="pay"><span>Payable after subsidy</span><b>${pay===''?'—':zm(pay)}</b></div>${r.f.addr?`<div class="wd"><span>Address</span>${E(r.f.addr)}</div>`:''}</div>
+ <div class="cc-g"><div><span>Mobile</span>${E(r.f.mob||'—')}</div><div><span>Panels / capacity</span>${pn||'—'}</div><div><span>Project cost</span>${zm(r.f.cost)||'—'}</div><div><span>Payment with subsidy</span>${zm(v7With(r))||'—'}</div><div class="pay"><span>Payment after subsidy</span><b>${pay===''?'—':zm(pay)}</b></div>${r.f.addr?`<div class="wd"><span>Address</span>${E(r.f.addr)}</div>`:''}</div>
  ${loanBox}
  <div><i class="tag ${p.length?'s':'g'}">Docs ${a-p.length}/${a}</i>${p.length?`<div class="dpend">${p.map(t=>`<i class="tag">${E(t)}</i>`).join('')}</div>`:''}</div>
  <div class="cc-b"><button class="sm" onclick="cfView('${r.id}')">View</button><button class="sm nv" onclick="cfOpen('${r.id}')">Edit</button>${ME.admin?`<button class="sm dg" onclick="cfDelId('${r.id}')">Delete</button>`:''}</div></div>`};
 
 cfList=function(){const a=v7Fil(),b=$('cf_box');if(!b)return;const loan=V7TAB=='loan',narrow=innerWidth<900;
- V7C=loan?v7LoanCols():v7CustCols(a);ZF=V7C;
+ V7C=loan?v7LoanCols():v7CustCols(a);ZF=V7C;V8L=v8Lay();v8Keys(V7C);v8Css();
  const head=`<div class="zs" id="cf_sum">${v7Sum(a)}</div>`,more=a.length>CFN?`<button class="sm" style="margin-top:8px" onclick="CFN+=300;cfList()">Show more (${a.length-CFN} left)</button>`:'';
  if(narrow){b.innerHTML=head+`<div class="ccs">${a.slice(0,CFN).map(v7Card).join('')||`<div class="card m" style="padding:22px">${loan?'No loan customers in this selection.':'No customers in this selection.'}</div>`}</div>`+more;return}
- b.innerHTML=head+`<div class="xl"><table class="xt fit"><thead><tr><th class="k k1">#</th>${V7C.map(c=>(CFALL||c.c)?`<th class="${(c.hcls||(c.cls||'').replace(/\b(tx|wrap2?)\b/g,'')).trim()}">${c.hdr||E(c.n)}</th>`:'').join('')}<th class="k ka">Actions</th></tr></thead><tbody onclick="zTd(event,'${loan?'loan':'cf'}')">${a.slice(0,CFN).map((r,i)=>`<tr data-id="${r.id}" data-i="${i}">${v7Cells(r,i)}</tr>`).join('')||`<tr><td colspan="${V7C.length+2}" class="m" style="padding:26px">${loan?'No loan customers in this selection.':'No customers in this selection.'}</td></tr>`}</tbody></table></div>`+more};
+ b.innerHTML=head+`<div class="xl"><table class="xt fit"><thead><tr><th class="k k1">#</th>${V7C.map((c,x)=>v8Vis(c)?`<th class="${(c.hcls||(c.cls||'').replace(/\b(tx|wrap2?)\b/g,'')).trim()} ${c.cl||''}">${c.hdr||E(c.n)}${v8Hd(c)}</th>`:'').join('')}<th class="k ka">Actions</th></tr></thead><tbody onclick="zTd(event,'${loan?'loan':'cf'}')">${a.slice(0,CFN).map((r,i)=>`<tr data-id="${r.id}" data-i="${i}">${v7Cells(r,i)}</tr>`).join('')||`<tr><td colspan="${V7C.length+2}" class="m" style="padding:26px">${loan?'No loan customers in this selection.':'No customers in this selection.'}</td></tr>`}</tbody></table></div>`+more};
 let V7RS;addEventListener('resize',()=>{clearTimeout(V7RS);V7RS=setTimeout(()=>{if(typeof VIEW!=='undefined'&&VIEW=='cf'&&$('cf_box'))cfList()},200)});
 
 function v7Tab(t){V7TAB=t;CFQ.loan='';CFQ.lst='';CFQ.app='';CFQ.lwby='';draw()}
@@ -2045,14 +2056,14 @@ VIEWS.cf=function(){const D=CD(),all=CU(),nl=all.filter(r=>r.l).length,loan=V7TA
  sl=(k,t,o)=>`<label>${t}<select onchange="CFQ.${k}=this.value;cfList()"><option value="">All</option>${o.map(([v,n])=>`<option value="${E(v)}" ${CFQ[k]==v?'selected':''}>${E(n)}</option>`).join('')}</select></label>`,sd=l=>l.map(x=>[x,x]),
  docOpts=[['ok','All documents complete'],['no','Any document pending']].concat(D.docs.map(d=>['miss:'+d,d+' – pending'])).concat(D.ldocs.map(d=>['miss:'+d,d+' – pending (loan)']));
  const un=v6Unm();if(un&&(ME.admin||ME.dept=='doc')&&!M6&&!MFAIL6){v6MergeAll().then(n=>{if(n){toast(n+' old customers merged into Customers ✓');if(VIEW=='cf')draw()}})}
- const acts=loan?`<button class="sm pri" onclick="v7LoanAdd()">+ Add loan to a customer</button><button class="sm" onclick="cfDl('l')">Loan Excel</button>`:`<button class="sm ${CFALL?'':'pri'}" onclick="CFALL=!CFALL;draw()">${CFALL?'Show fewer columns':'Show all columns'}</button><button class="sm" onclick="cfDl('c')">Customer Excel</button>`;
- $('main').innerHTML=`<div class="dh"><div><h2>Customers</h2><div class="sub">${loan?'Loan customers only – every loan detail in one table.':'Overall customer file – customers who have a loan show a LOAN badge.'}</div></div><div class="row"><button class="btn pri" onclick="cfOpen()">+ New customer</button></div></div>
+ const acts=loan?`<button class="sm" onclick="cfDl('l')">Loan Excel</button>`:`<button class="sm ${CFALL?'':'pri'}" onclick="CFALL=!CFALL;draw()">${CFALL?'Show fewer columns':'Show all columns'}</button><button class="sm" onclick="cfDl('c')">Customer Excel</button>`;
+ $('main').innerHTML=`<div class="dh"><div><h2>Customers</h2><div class="sub">${loan?'Customers with Loan = Yes come here automatically – every loan detail in one table.':'Overall customer file – set LOAN = Yes and the customer also appears in Loan customers.'}</div></div><div class="row"><button class="btn pri" onclick="cfOpen()">+ New customer</button></div></div>
  ${un&&ME.admin&&MFAIL6?`<div class="card warn">${un} old customer record${un>1?'s':''} could not be merged automatically. <button class="sm" onclick="MFAIL6=false;v6MergeAll().then(()=>draw())">Try again</button></div>`:''}${geoBar()}
  <div class="v7tabs"><button class="${!loan?'on':''}" onclick="v7Tab('all')">All customers <em>${all.length}</em></button><button class="ln ${loan?'on':''}" onclick="v7Tab('loan')">Loan customers <em>${nl}</em></button></div>
  <div class="card"><div class="tb6"><label>Search<input placeholder="File no. / name / mobile / address / consumer no. / DCR…" value="${E(CFQ.q)}" oninput="CFQ.q=this.value;cfList()" style="margin-top:3px"></label>
  <button class="sm v7fb" onclick="V7FO=!V7FO;draw()">${V7FO?'Hide filters ▴':'Filters ▾'}</button></div>
  <div class="v7fbox ${V7FO?'':'shut'}"><div class="tb6" style="margin-top:10px">${loan?sl('app','Bank',sd(D.bank))+sl('lst','Loan status',sd(D.lst))+sl('lwby','Loan work by',sd(D.lwby)):sl('wby','Work by',sd(D.wby))+sl('st','Status',sd(D.st))+sl('ws','Work status',sd(D.ws))+sl('loan','Loan',[['y','With loan'],['n','No loan']])}${sl('sp','Sales person',sd(SALESN6()))}${loan?'':sl('wk','Install work',sd(['Not started','In progress','Complete']))}${sl('doc','Documents',docOpts)}</div></div>
- <div class="row" style="margin-top:10px">${acts}${ME.admin?'<button class="sm nv" onclick="VIEW=\'set\';shell()">States &amp; cities</button><button class="sm nv" onclick="cfAdmin()">Dropdowns &amp; fields</button>':''}<button class="sm" onclick="ssdPick()">${SSD?'PC folder: '+E(SSD.name):'Choose PC folder'}</button></div></div><div id="cf_box"></div>`;cfList()};
+ <div class="row" style="margin-top:10px">${acts}<button class="sm nv" onclick="v8Mgr()">⚙ Columns &amp; size</button>${ME.admin?'<button class="sm nv" onclick="VIEW=\'set\';shell()">States &amp; cities</button><button class="sm nv" onclick="cfAdmin()">Dropdowns &amp; fields</button>':''}<button class="sm" onclick="ssdPick()">${SSD?'PC folder: '+E(SSD.name):'Choose PC folder'}</button></div></div><div id="cf_box"></div>`;cfList()};
 VIEWS.jobs=VIEWS.cf;
 
 
@@ -2061,7 +2072,7 @@ VIEWS.jobs=VIEWS.cf;
    ========================================================= */
 const v7MInp=(k,lab,hint)=>`<label>${lab}<div class="mny"><i>₹</i><input type="text" inputmode="decimal" autocomplete="off" placeholder="0" value="${E(v7Fmt(CF.f[k]))}" oninput="v7Mi(this,'${k}')"></div>${hint?`<span class="m" style="font-weight:500;text-transform:none;letter-spacing:0">${hint}</span>`:''}</label>`;
 function v7Mi(el,k){const pos=el.selectionStart,digs=el.value.slice(0,pos).replace(/[^\d.]/g,'').length,raw=el.value.replace(/[^\d.]/g,'');cfV('f',k,raw);const fm=v7Fmt(raw);el.value=fm;let c=0,i=0;while(i<fm.length&&c<digs){if(/[\d.]/.test(fm[i]))c++;i++}try{el.setSelectionRange(i,i)}catch(e){}v7PayUp()}
-function v7PayUp(){const e=$('pay_v');if(!e)return;const p=v7Pay(CF);e.textContent=p===''?'₹ 0':zm(p);e.style.color=p!==''&&p<0?'#c0392b':''}
+function v7PayUp(){const w=$('pay_w');if(w){const x=v7With(CF);w.textContent=x===''?'₹ 0':zm(x)}const e=$('pay_v');if(!e)return;const p=v7Pay(CF);e.textContent=p===''?'₹ 0':zm(p);e.style.color=p!==''&&p<0?'#c0392b':''}
 function v7Pnl(){const f=CF.f,np=+f.np||0,wp=+f.wp||0,e=$('pn_sum');if(np>0&&wp>0)f.kw=String(+(np*wp/1000).toFixed(2));if(e)e.innerHTML=np&&wp?`${np} panels × ${wp} Wp = <span style="font-size:17px">${+(np*wp/1000).toFixed(2)} kWp</span> <span class="tag b" style="text-transform:none">Capacity</span>`:'Enter number of panels and watt – capacity is calculated automatically'}
 
 function cfDraw(){const D=CD(),sc=CFERR?0:(document.querySelector('#mod')||{}).scrollTop||0,sts=Object.keys(D.states),cities=D.states[CF.state]||[],have=cfHave(CF).length,need=cfNeed(CF),j=CF.id?v6JobOfFile(CF):null,
@@ -2078,21 +2089,23 @@ function cfDraw(){const D=CD(),sc=CFERR?0:(document.querySelector('#mod')||{}).s
    ${F('cno')}${F('imm')}${F('date')}
    <label>SALES PERSON<select onchange="CF.sales=this.value"><option value="">— choose —</option>${sp.map(s=>`<option ${s==CF.sales?'selected':''}>${E(s)}</option>`).join('')}</select></label>
    ${cfX(D,'c')}</div></div>
-  <div class="fs alt"><h3>2 · Work &amp; status</h3><div class="fx">${F('wby')}${F('st')}${F('ws')}
-   ${v7MInp('cost','PROJECT COST (TOTAL)','Total cost of the project')}${v7MInp('ssub','STATE SUBSIDY','Gujarat / state government subsidy')}${v7MInp('subr','CENTRAL GOVT SUBSIDY','Subsidy receive amount – central government')}
-   <div class="payb"><div><span>Customer payable (after subsidy)</span><em>Project cost − state subsidy − central subsidy</em></div><b id="pay_v">₹ 0</b></div>
-   ${F('rem','text','wd')}</div></div>
-  <div class="fs"><h3>3 · Panels &amp; inverter <span class="m">(panel make, how many and how many Wp – capacity is calculated from these)</span></h3><div class="fx">${X('pm','PANEL MAKE / MODEL','text','w2')}<label>No Of Panel<input type="number" inputmode="numeric" value="${E(CF.f.np??'')}" oninput="cfV('f','np',this.value);v7Pnl();cfSerUp()"></label><label>PENAL WP<input type="number" inputmode="numeric" value="${E(CF.f.wp??'')}" oninput="cfV('f','wp',this.value);v7Pnl()"></label>${F('inv')}</div>
-   <div class="pnlsum" id="pn_sum"></div>
-   <label>Panel serial numbers – one per line (PENAL 1, 2, 3 …) <span class="tag b" id="pn_cnt"></span><textarea rows="4" oninput="cfV('f','pan',this.value);cfSerUp()">${E(CF.f.pan||'')}</textarea></label></div>
-  <div class="fs alt"><h3>4 · Meter &amp; subsidy</h3><div class="fx">${F('dis')}${F('mq')}${F('div')}${F('sub')}${F('idt')}${F('scl')}${F('srv')}${F('dcre')}${F('dcr')}</div></div>
-  <div class="fs"><h3>5 · Loan</h3><label class="ck"><input type="checkbox" ${CF.l?'checked':''} onchange="CF.l=this.checked?(CF.l||{}):null;cfDraw()"> Loan is required for this customer</label>
-   ${CF.l?`<div class="m">Name, address, mobile, consumer no., capacity and project amount are taken from the customer details.</div><div class="fx">${CFL.map(([k,n,t,l])=>`<div>${cfIn('l',k,n,t,D[l])}</div>`).join('')}${cfX(D,'l')}</div>`:''}</div>
-  <div class="fs alt"><h3>6 · Installation work &amp; material ${j?wkTag6(j):''}</h3>${CF.id?`<div class="m">${j&&needTxt(j)?'Material needed: <b>'+E(needTxt(j))+'</b>':'Material not entered yet.'}</div><div class="wkc">${JBSTEPS.map((n,i)=>`<button class="sm ${j&&stepDone(j,i+1)?'pri':''}" onclick="cfWork(${i+1})">${i+1}. ${E(n)}</button>`).join('')}</div><div class="m">Saves this customer first, then opens that step (material, fabrication / wiring, serial numbers).</div>`:'<div class="m">Save the customer first – then material and work steps open here.</div>'}</div>
+  <div class="fs alt"><h3>2 · Work &amp; project cost</h3><div class="fx">${F('wby')}<label>LOAN (Yes / No)<select onchange="cfLoanSet(this.value)"><option value="n" ${CF.l?'':'selected'}>No</option><option value="y" ${CF.l?'selected':''}>Yes</option></select></label>${F('st')}${F('ws')}
+    ${v7MInp('cost','PROJECT COST (TOTAL)','Total cost of the project')}${v7MInp('ssub','STATE SUBSIDY','Gujarat / state government subsidy')}${v7MInp('subr','CENTRAL GOVT SUBSIDY','Subsidy receive amount – central government')}
+    <div class="payb"><div><span>Payment with subsidy</span><em>Customer pays upfront = project cost (subsidy comes later)</em></div><b id="pay_w">₹ 0</b></div>
+    <div class="payb"><div><span>Payment after subsidy</span><em>Project cost − state subsidy − central subsidy</em></div><b id="pay_v">₹ 0</b></div>
+    ${F('rem','text','wd')}</div></div>
+   <div class="fs"><h3>3 · Panels &amp; inverter <span class="m">(capacity is calculated from panels × watt)</span></h3><div class="fx">${X('pm','PANEL MAKE / MODEL','text','w2')}<label>TOTAL PANELS (No Of Panel)<input type="number" inputmode="numeric" value="${E(CF.f.np??'')}" oninput="cfV('f','np',this.value);v7Pnl();cfSerGrid();v8SerUp()"></label><label>PENAL WP<input type="number" inputmode="numeric" value="${E(CF.f.wp??'')}" oninput="cfV('f','wp',this.value);v7Pnl()"></label>${X('inv','INVERTER SERIAL NO.','text','w2')}</div>
+    <div class="pnlsum" id="pn_sum"></div>
+    <div class="row" style="margin-top:6px"><b>PANEL SERIAL NUMBERS</b> <span class="tag b" id="pn_cnt"></span></div>
+    <div class="sg" id="pn_grid"></div>
+    <details style="margin-top:6px"><summary class="m" style="cursor:pointer">Paste all serial numbers at once (one per line)</summary><textarea id="pn_paste" rows="3" placeholder="one serial number per line"></textarea><button type="button" class="sm" style="margin-top:6px" onclick="cfSerPaste()">Fill the boxes</button></details></div>
+   <div class="fs alt"><h3>4 · Meter &amp; subsidy</h3><div class="fx">${F('dis')}${F('mq')}${F('div')}${F('sub')}${F('idt')}${F('scl')}${F('srv')}${F('dcre')}${F('dcr')}</div></div>
+  <div class="fs"><h3>5 · Loan details</h3>${CF.l?`<div class="m">Loan = Yes – this customer is in the Loan customers tab. Name, address, mobile, consumer no., capacity and project amount are taken from the customer details.</div><div class="fx">${CFL.map(([k,n,t,l])=>`<div>${cfIn('l',k,n,t,D[l])}</div>`).join('')}${cfX(D,'l')}</div>`:'<div class="m">Loan = No. Choose <b>Loan = Yes</b> in section 2 and this customer is added to Loan customers automatically – no manual entry needed.</div>'}</div>
+   <div class="fs alt"><h3>6 · Installation work &amp; material ${j?wkTag6(j):''}</h3>${CF.id?`<div class="m">${j&&needTxt(j)?'Material needed: <b>'+E(needTxt(j))+'</b>':'Material not entered yet.'}</div><div class="wkc">${JBSTEPS.map((n,i)=>`<button class="sm ${j&&stepDone(j,i+1)?'pri':''}" onclick="cfWork(${i+1})">${i+1}. ${E(n)}</button>`).join('')}</div><div class="m">Saves this customer first, then opens that step (material, fabrication / wiring, serial numbers).</div>`:'<div class="m">Save the customer first – then material and work steps open here.</div>'}</div>
   <div class="fs"><h3>7 · Documents <span class="tag ${have==need.length?'g':'s'}">${have}/${need.length}</span></h3>${SSD?'':'<div class="card warn">Documents are saved on the PC folder only. Open this on the Master PC, or <button class="sm" onclick="ssdPick()">Choose PC folder</button></div>'}
    <div class="fx">${need.map(t=>{const ds=(CF.docs||[]).map((d,i)=>[d,i]).filter(x=>x[0].t==t),pn=PEND.map((p,i)=>[p,i]).filter(x=>x[0].t==t);return `<div class="card" style="margin:6px 0"><b>${E(t)}</b>${ds.map(([d,i])=>`<div class="m">✓ ${E(d.n)} <button class="sm" onclick="cfShow('${CF.id}',${i})">Open</button> <button class="sm dg" onclick="cfDocDel(${i})">✕</button></div>`).join('')}${pn.map(([p,i])=>`<div class="m">${E(p.f.name)} (saves on Save) <button class="sm dg" onclick="cfPendDel(${i})">✕</button></div>`).join('')}<input type="file" accept="image/*,application/pdf" multiple onchange="cfPick('${E(t)}',this)"></div>`}).join('')}</div></div>
   <div class="v7bar"><button class="btn pri sp" onclick="cfSave()">Save</button>${CF.id&&ME.admin?'<button class="btn dg" onclick="cfDel()">Delete</button>':''}<button class="btn" onclick="closeM()">Cancel</button></div>`);
-  v7Pnl();v7PayUp();cfSerUp();const m=document.querySelector('#mod');if(m)m.scrollTop=sc}
+  v7Pnl();v7PayUp();cfSerGrid();v8SerUp();const m=document.querySelector('#mod');if(m)m.scrollTop=sc}
 const _cfSave7=cfSave;cfSave=async function(){if(CF)v7Norm(CF);return _cfSave7()};
 
 /* =========================================================
@@ -2122,8 +2135,8 @@ function cfView(id){const r=G('files',id);if(!r)return;v7LbX();Object.keys(V7DOC
  rec=L('moves').filter(m=>m.type=='in'&&m.cust==r.id).sort((a,b)=>(b.ts||'').localeCompare(a.ts||'')),pend=v7Pend(r),docs=r.docs||[];
  bigModal(`<div class="row"><h2 class="sp">${E(r.cid)} – ${E(r.f.name||'')}</h2><button class="sm" onclick="closeM()">Close</button></div><div class="row" style="margin:4px 0">${r.l?'<i class="tag ln">LOAN</i>':''}${zst(r.f.st)}${zst(r.f.ws)}${wkTag6(j)}<span class="tag ${pend.length?'s':'g'}">Docs ${cfNeed(r).length-pend.length}/${cfNeed(r).length}</span></div>
   <div class="vcard"><h3>Customer</h3><div class="vg">${R('name')}${R('mob')}${row('Address',r.f.addr)}${row('State / City',[r.state,r.city].filter(Boolean).join(' › '))}${R('cno')}${R('imm')}${R('date')}${row('Sales person',r.sales)}</div></div>
-  <div class="vcard"><h3>Work &amp; money</h3><div class="vg">${R('wby')}${row('Project cost (total)',mny(r.f.cost))}${row('State subsidy',mny(r.f.ssub))}${row('Central govt subsidy',mny(r.f.subr))}${R('rem')}</div><div class="vpay"><span>Customer payable (after subsidy)</span><b>${pay===''?'—':zm(pay)}</b></div></div>
-  <div class="vcard"><h3>Panels &amp; inverter</h3><div class="vg">${row('Panels',[r.f.pm,np&&wp?np+' × '+wp+' Wp':(np||wp?(np||'—')+' × '+(wp||'—')+' Wp':'')].filter(Boolean).join(' · '))}${row('Capacity',cap===''?'':cap+' kW')}${R('inv')}</div>${ser.length?`<div class="vg" style="margin-top:6px">${ser.map((s,i)=>row('PENAL '+(i+1),s)).join('')}</div>`:''}</div>
+  <div class="vcard"><h3>Work &amp; money</h3><div class="vg">${R('wby')}${row('Project cost (total)',mny(r.f.cost))}${row('State subsidy',mny(r.f.ssub))}${row('Central govt subsidy',mny(r.f.subr))}${R('rem')}</div><div class="vpay"><span>Payment with subsidy (upfront)</span><b>${mny(v7With(r))}</b></div><div class="vpay"><span>Payment after subsidy</span><b>${pay===''?'—':zm(pay)}</b></div></div>
+  <div class="vcard"><h3>Panels &amp; inverter</h3><div class="vg">${row('Panels',[r.f.pm,np&&wp?np+' × '+wp+' Wp':(np||wp?(np||'—')+' × '+(wp||'—')+' Wp':'')].filter(Boolean).join(' · '))}${row('Capacity',cap===''?'':cap+' kW')}${row('Inverter serial no.',r.f.inv)}</div>${ser.length?`<div class="vg" style="margin-top:6px">${ser.map((s,i)=>row('PENAL '+(i+1),s)).join('')}</div>`:''}</div>
   <div class="vcard"><h3>Meter &amp; subsidy</h3><div class="vg">${R('dis')}${R('mq')}${R('div')}${R('sub')}${R('idt')}${R('scl')}${R('srv')}${R('dcre')}${R('dcr')}</div></div>
   ${r.l?`<div class="vcard"><h3>Loan</h3><div class="vg">${CFL.map(([k,n,t])=>row(n,f(t,k,r.l[k]))).join('')}</div></div>`:''}
   <div class="vcard"><h3>Installation work</h3><div class="vg">${row('Material needed',needTxt(j))}${row('Fabrication',[JST[j.fabSt||'pending'],j.fabName||staffName(j.fabBy),j.fabDate&&fd(j.fabDate)].filter(Boolean).join(' · '))}${row('Wiring',[JST[j.wireSt||'pending'],j.wireName||staffName(j.wireBy),j.wireDate&&fd(j.wireDate)].filter(Boolean).join(' · '))}${row('Net meter',[j.meterSt,j.meterNo,j.meterDate&&fd(j.meterDate)].filter(Boolean).join(' · '))}${row('Commissioning',[j.comSt,j.comDate&&fd(j.comDate)].filter(Boolean).join(' · '))}</div></div>
@@ -2166,11 +2179,56 @@ mvTbl6=function(){const ms=mvRows6(),out=ms.filter(m=>m.type=='out');
    EXCEL  (customer file: panel columns follow the data, payable included; loan Excel unchanged)
    ========================================================= */
 const _cfRow7=cfRow;
-cfRow=function(k,r){const o=_cfRow7(k,r);if(k=='c'){const pl=CFF.find(a=>a[0]=='pay')[1],p=v7Pay(r);o[pl]=p;Object.keys(o).forEach(x=>{if(/^PENAL \d+$/.test(x))delete o[x]});v6Ser(r).forEach((s,i)=>{if(s)o['PENAL '+(i+1)]=s})}return o};
+cfRow=function(k,r){const o=_cfRow7(k,r);if(k=='c'){const pl=CFF.find(a=>a[0]=='pay')[1],p=v7Pay(r);o[pl]=p;o[CFF.find(a=>a[0]=='wsub')[1]]=v7With(r);Object.keys(o).forEach(x=>{if(/^PENAL \d+$/.test(x))delete o[x]});v6Ser(r).forEach((s,i)=>{if(s)o['PENAL '+(i+1)]=s})}return o};
 const v7Hdr=(k,rs)=>{let h=cfCols(k);if(k!='c')return h;const n=Math.max(12,V7PAN,...rs.map(r=>v6Ser(r).length)),i=h.findIndex(x=>/^PENAL \d+$/.test(x));h=h.filter(x=>!/^PENAL \d+$/.test(x));h.splice(i<0?h.length:i,0,...Array.from({length:n},(_,j)=>'PENAL '+(j+1)));return h};
 cfWB=function(k,rs,bySheet){const wb=XLSX.utils.book_new(),h=v7Hdr(k,rs),add=(n,a)=>XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(a.map(r=>cfRow(k,r)),{header:h}),n.replace(/[\\/?*\[\]:]/g,' ').slice(0,31)||'Sheet1');
  if(k=='c'&&bySheet){const cs=[];Object.values(CD().states).forEach(a=>a.forEach(c=>cs.includes(c)||cs.push(c)));rs.forEach(r=>r.city&&!cs.includes(r.city)&&cs.push(r.city));cs.forEach(c=>add(c,rs.filter(r=>r.city==c)));const o=rs.filter(r=>!r.city);if(o.length)add('NO CITY',o)}else add(k=='c'?'ALL':'Sheet1',rs);return wb};
 cfDl=function(k){if(!window.XLSX)return toast('Excel library needs internet');const rs=v7Fil().filter(r=>k=='c'||r.l);if(!rs.length)return toast('Nothing to download');dl(cfBlob(cfWB(k,rs,k=='c'&&!CFQ.c)),(k=='c'?'GUJARAT_CUSTOMER_FILE_':'GUJARAT_CUSTOMER_LOAN_')+today()+'.xlsx')};
+
+
+/* ===== v8: Loan Yes/No, serial numbers at the end, columns show / hide / resize (remembered) ===== */
+const V8K='sz_cfcols_v8';let V8L={vis:{},w:{},rh:'n'},V8R=[];
+const v8Tab=()=>V7TAB=='loan'?'loan':'cust';
+function v8Lay(){const t=v8Tab();let o=lsG(V8K+'_'+t);if(!o){const p=G('pub','cfcols');if(p&&p[t])o=p[t]}o=o||{};return{vis:o.vis||{},w:o.w||{},rh:o.rh||'n'}}
+function v8Save(){const t=v8Tab();lsS(V8K+'_'+t,V8L);if(ME&&ME.admin){try{const p=clone(G('pub','cfcols')||{});p[t]=V8L;stSet('pub','cfcols',p).catch(()=>{})}catch(e){}}}
+function v8Keys(cols){const seen={};cols.forEach((c,i)=>{let k=/^PENAL \d+$/.test(c.n)?'@pan':c.n===''?'@add':c.n;if(k[0]!='@'){seen[k]=(seen[k]||0)+1;if(seen[k]>1)k+='#'+seen[k]}c.key=k;c.cl=k=='@pan'?'vkp':k=='@add'?'vka':'vk'+i})}
+function v8Vis(c){if(c.key=='FILE')return true;const k=c.key=='@add'?'@pan':c.key,v=V8L.vis[k];if(v!==undefined)return !!v;return c.key=='@add'?true:!!(CFALL||c.c)}
+function v8Hd(c){if(c.key=='FILE'||c.key=='@add')return '';return `<i class="v8rz" data-k="${E(c.key)}" data-cl="${c.cl}" onpointerdown="v8Rz(event,this)" title="Drag to make the column wider / narrower"></i>`}
+function v8Css(){let s=$('v8css');if(!s){s=document.createElement('style');s.id='v8css';document.head.appendChild(s)}
+ let x='';const done={};V7C.forEach(c=>{if(c.key=='@add'||done[c.cl])return;done[c.cl]=1;const w=V8L.w[c.key];if(w>0)x+=`table.xt.fit td.${c.cl},table.xt.fit th.${c.cl}{width:${w}px!important;min-width:${w}px!important;max-width:${w}px!important;overflow:hidden;text-overflow:ellipsis}`});
+ if(V8L.rh=='s')x+='table.xt.fit td{padding-top:2px!important;padding-bottom:2px!important}';else if(V8L.rh=='l')x+='table.xt.fit td{padding-top:15px!important;padding-bottom:15px!important}';
+ s.textContent=x}
+function v8Rz(e,el){e.preventDefault();e.stopPropagation();const th=el.parentNode,x0=e.clientX,w0=th.getBoundingClientRect().width,k=el.dataset.k,cl=el.dataset.cl;let w=Math.round(w0);el.classList.add('on');
+ let s=$('v8live');if(!s){s=document.createElement('style');s.id='v8live';document.head.appendChild(s)}
+ const mv=ev=>{w=Math.max(50,Math.round(w0+ev.clientX-x0));s.textContent=`table.xt.fit td.${cl},table.xt.fit th.${cl}{width:${w}px!important;min-width:${w}px!important;max-width:${w}px!important;overflow:hidden;text-overflow:ellipsis}`};
+ const up=()=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up);s.textContent='';el.classList.remove('on');V8L.w[k]=w;v8Save();v8Css()};
+ addEventListener('pointermove',mv);addEventListener('pointerup',up)}
+/* column manager */
+function v8Mgr(){if(!V7C.length)return;const adm=ME&&ME.admin,seen=new Set();V8R=[];V7C.forEach(c=>{if(c.key=='FILE'||c.key=='@add'||seen.has(c.key))return;seen.add(c.key);V8R.push(c)});
+ const rh=V8L.rh||'n';
+ modal(`<div class="row"><h2 class="sp">Columns &amp; size</h2><button class="sm" onclick="closeM()">Done</button></div>
+ <p class="sub">Tick = show the column, untick = remove it from the table (customer data is not deleted). Write a width in px (empty = auto) or drag the right edge of a column heading. This stays the same until you change it. To add a customer use <b>+ New customer</b>; to remove one use <b>Delete</b> on its row.</p>
+ <div class="card"><div class="row"><b class="sp">Row height</b><select onchange="v8Rh(this.value)" style="width:auto;margin:0"><option value="s" ${rh=='s'?'selected':''}>Short</option><option value="n" ${rh=='n'?'selected':''}>Normal</option><option value="l" ${rh=='l'?'selected':''}>Tall</option></select></div></div>
+ <div class="card"><div class="v8l">${V8R.map((c,i)=>`<div class="v8r"><label class="ck"><input type="checkbox" ${v8Vis(c)?'checked':''} onchange="v8Show(${i},this.checked)"> ${c.key=='@pan'?'PANEL SERIAL NOS. (PENAL 1, 2, 3 …)':E(c.n)}</label><input class="v8w" type="number" min="40" step="10" placeholder="auto" value="${V8L.w[c.key]||''}" onchange="v8Wid(${i},this.value)"><span class="m">px</span>${adm&&c.fk?`<button class="sm dg" onclick="v8Del('${E(c.fk)}')">Delete</button>`:''}</div>`).join('')}</div></div>
+ ${adm?`<div class="card"><b>+ Add a new column</b> <span class="m">(also appears in the customer form &amp; Excel)</span><div class="r3" style="margin-top:6px"><input id="v8n" placeholder="Column name"><select id="v8t"><option value="text">Text</option><option value="num">Number</option><option value="date">Date</option><option value="dd">Dropdown</option></select><button class="sm pri" onclick="v8Add()">Add column</button></div></div>`:'<div class="m">Only the owner can add or delete columns. Everyone can show / hide / resize.</div>'}
+ <div class="row" style="margin-top:8px"><button class="sm" onclick="v8Reset()">Reset to default</button></div>`)}
+function v8Show(i,on){V8L.vis[V8R[i].key]=!!on;v8Save();cfList()}
+function v8Wid(i,v){const k=V8R[i].key,w=Math.round(+v);if(w>=40)V8L.w[k]=w;else delete V8L.w[k];v8Save();cfList()}
+function v8Rh(v){V8L.rh=v;v8Save();v8Css()}
+function v8Reset(){V8L={vis:{},w:{},rh:'n'};v8Save();cfList();v8Mgr()}
+async function v8Add(){const n=val('v8n').trim();if(!n)return toast('Enter the column name');const D=clone(CD()),f={k:'e'+Date.now().toString(36),n,sec:V7TAB=='loan'?'l':'c',t:val('v8t')};D.fields.push(f);
+ if(f.t=='dd'){const o=prompt('Dropdown options, separated by commas (you can change them later in "Dropdowns & fields")','');D['x_'+f.k]=(o||'').split(',').map(s=>s.trim()).filter(Boolean)}
+ await cfSaveD(D);V8L.vis[n]=true;v8Save();cfList();v8Mgr();toast('Column added ✓')}
+async function v8Del(fk){if(!confirm('Delete this column? (values already saved stay in the data)'))return;const D=clone(CD());D.fields=D.fields.filter(x=>x.k!=fk);await cfSaveD(D);cfList();v8Mgr();toast('Column deleted')}
+/* loan Yes / No – Yes puts the customer in Loan customers, No takes it out (loan details are kept aside and come back on Yes) */
+function v8LoanSet(r,yes){if(yes){r.l=r.l||r.lbk||{};delete r.lbk}else{if(r.l&&Object.values(r.l).some(x=>String(x??'').trim()!==''))r.lbk=r.l;r.l=null}}
+function cfLoanSet(v){if(!CF)return;v8LoanSet(CF,v=='y');cfDraw()}
+/* panel serial boxes in the form */
+function cfSerGrid(){const g=$('pn_grid');if(!g)return;const a=v6Ser(CF),np=Math.max(0,Math.min(500,Math.round(+CF.f.np||0))),n=Math.max(np,a.length);
+ g.innerHTML=n?Array.from({length:n},(_,i)=>`<label class="sgi"><span>PENAL ${i+1}</span><input value="${E(a[i]||'')}" oninput="cfSerSet(${i},this.value)" autocomplete="off"></label>`).join(''):'<div class="m">Enter the total number of panels above – the serial number boxes appear here.</div>'}
+function cfSerSet(i,v){const a=v6Ser(CF);while(a.length<=i)a.push('');a[i]=String(v).replace(/[\r\n,;\t]+/g,' ').trim();while(a.length&&!a[a.length-1])a.pop();CF.f.pan=a.join('\n');v8SerUp()}
+function v8SerUp(){const e=$('pn_cnt');if(!e)return;const n=v6Ser(CF).filter(Boolean).length,np=+CF.f.np||0;e.textContent=n+(np?' of '+np+' entered':' entered')}
+function cfSerPaste(){const a=val('pn_paste').split(/\r?\n|[,;\t]+/).map(s=>s.trim()).filter(Boolean);if(!a.length)return toast('Paste the serial numbers first');CF.f.pan=a.join('\n');if(!(+CF.f.np>=a.length))CF.f.np=String(a.length);cfDraw()}
 
 </script>
 </body></html>
