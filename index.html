@@ -1442,4 +1442,86 @@ VIEWS.dash=()=>{const s=stats(),all=CU().filter(zGeoRec),act=!!(CFQ.s||CFQ.c),gf
  <div class="card"><h4>Quick actions</h4><div class="row"><button class="sm pri" onclick="VIEW='cf';shell();cfOpen()">+ Customer file</button><button class="sm" onclick="VIEW='jobs';shell();jbOpen('',1)">+ Customer</button><button class="sm" onclick="VIEW='set';shell()">States and cities</button></div></div></aside></div>`};
 </script>
 
+<style>
+button,input,select,textarea{font-family:inherit}
+.btn,.sm{display:inline-flex;align-items:center;justify-content:center;gap:6px;box-sizing:border-box;line-height:1;white-space:nowrap;font-weight:600;letter-spacing:.01em;transition:background .15s,border-color .15s,box-shadow .15s}
+.btn{height:40px;padding:0 18px;min-width:104px;font-size:13.5px;border-radius:10px}
+.sm{height:34px;padding:0 13px;min-width:66px;font-size:12.5px;border-radius:8px}
+.btn:hover,.sm:hover{background:#f1f5f9;border-color:#c3cfdb}.pri:hover{background:var(--gr2,#3d8f2a);border-color:var(--gr2,#3d8f2a)}.nv:hover{background:#1c3a52;border-color:#1c3a52}
+.btn:active,.sm:active{transform:translateY(1px)}.btn:disabled,.sm:disabled{opacity:.5;cursor:not-allowed}
+.btn.dg,.sm.dg{color:#b3261e;border-color:#efc7c3;background:#fff}.btn.dg:hover,.sm.dg:hover{background:#fdecea;border-color:#e3a8a2}
+.pri,.nv{color:#fff}.pri:hover,.nv:hover{color:#fff}
+.row:has(>select,>input:not([type=checkbox]):not([type=file]))>.sm{height:40px;min-width:80px}
+.row>select,.row>input:not([type=checkbox]):not([type=radio]):not([type=file]){height:40px;box-sizing:border-box}
+.row>.btn,.row>.sm{flex:0 0 auto}.row>.btn.sp{flex:1 1 auto}
+.tag{display:inline-flex;align-items:center;line-height:1.5}
+.it,.cr-top{align-items:center}.row>h2.sp{margin:0}
+.xt tbody tr:hover td{cursor:default}
+.xt td.ed:hover{cursor:text;outline:1px dashed #8fb08f;outline-offset:-2px;background:#fffdf0}
+.xt td.ed input,.xt td.ed select{width:100%;min-width:140px;height:30px;margin:0;padding:3px 8px;font-size:13px;box-sizing:border-box}
+.xt .ka{position:sticky;right:0;z-index:1;border-left:2px solid var(--bd);min-width:214px;text-align:center}.xt th.ka{z-index:3}
+.ab{display:flex;gap:6px;justify-content:center}.ab .sm{height:28px;min-width:62px;padding:0 8px}
+.xt tbody tr:nth-child(even) td.ka{background:#f7faf6}.xt tbody tr:hover td.ka{background:#e6f1e0}
+.stp{width:24px;height:24px;border-radius:50%;border:1px solid var(--bd);background:#fff;font-size:11px;font-weight:700;cursor:pointer;margin:0 2px;color:#7b8794;padding:0;line-height:1}.stp.on{background:var(--gr);color:#fff;border-color:var(--gr)}
+.cl{font-size:11px;margin-left:6px;color:var(--gr);font-weight:700}
+.zs{align-items:center}.zs .sm{margin-left:auto}
+.vg{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:4px 22px}.vr{border-bottom:1px solid var(--bd);padding:7px 0}.vr span{display:block;font-size:11.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}.vr b{display:block;font-size:14.5px;white-space:pre-wrap;word-break:break-word;font-weight:600}
+</style>
+<script>
+/* ===== v5: Excel tables with in-cell editing + View / Edit / Delete ===== */
+const zOpt=o=>(o||[]).map(x=>Array.isArray(x)?x:[x,x]),zTbl={};
+let ZF=[],ZJ=[],JALL=false;
+function zTd(e,T){const td=e.target.closest('td.ed');if(!td||e.target.closest('a,button')||td.querySelector('input,select'))return;
+ const tb=zTbl[T],tr=td.parentNode,id=tr.dataset.id,rec=tb.rec(id),col=tb.cols()[td.dataset.c];if(!rec||!col||!col.e)return;
+ const ed=col.e,cur=ed.get(rec)??'';let el;
+ if(ed.t=='dd'){const o=zOpt(typeof ed.o=='function'?ed.o(rec):ed.o);if(cur!==''&&!o.some(x=>x[0]==cur))o.push([cur,cur]);el=document.createElement('select');el.innerHTML=(o.some(x=>x[0]===''||x[0]==null)?'':'<option value=""></option>')+o.map(x=>`<option value="${E(x[0])}" ${x[0]==cur?'selected':''}>${E(x[1])}</option>`).join('')}
+ else{el=document.createElement('input');el.type=ed.t=='num'?'number':ed.t=='date'?'date':ed.t=='tel'?'tel':'text';if(ed.t=='num')el.step='any';el.value=cur}
+ td.innerHTML='';td.appendChild(el);el.focus();if(el.select&&ed.t!='date')try{el.select()}catch(x){}
+ let fin=false;const end=async ok=>{if(fin)return;fin=true;const nv=String(el.value).trim();if(ok&&ed.req&&!nv){toast('This field cannot be empty');ok=false}let r=rec;
+  if(ok&&nv!=String(cur)){r=clone(rec);ed.set(r,nv);try{await tb.save(r,col.n);toast('Saved')}catch(x){r=rec;toast('Could not save')}}
+  tr.innerHTML=tb.cells(tb.rec(id)||r,+tr.dataset.i);if(tb.sum)tb.sum()};
+ el.addEventListener('blur',()=>end(true));el.addEventListener('keydown',ev=>{if(ev.key=='Enter'){ev.preventDefault();el.blur()}else if(ev.key=='Escape'){ev.preventDefault();end(false)}});if(ed.t=='dd')el.addEventListener('change',()=>el.blur())}
+const zCallA=m=>m?` <a class="cl" href="tel:${E(String(m).replace(/\s/g,''))}">Call</a>`:'';
+/* ---- Customer File columns: every field of the form, editable in the cell ---- */
+const zNumK=new Set(['cost','subr','lamt','sa','da','t1','t2']);
+function zFC(){const D=CD(),cp=new Set(['kw','st','ws','wby','cost']),lcp=new Set(['app','lst']),cols=[];
+ const mk=(g,k,n,t,l)=>{const get=r=>g=='f'?r.f[k]:g=='l'?(r.l||{})[k]:(r.x||{})[k],tt=t=='dd'?'dd':t=='num'?'num':t=='date'?'date':t=='tel'?'tel':'text';
+  return{n,c:g=='f'?cp.has(k):g=='l'?lcp.has(k):0,cls:tt=='num'?'r':'',r:r=>{const v=get(r);if(v==null||v==='')return '';return tt=='date'?zdt(v):zNumK.has(k)?zm(v):(k=='st'||k=='ws'||k=='lst')?zst(v):E(v)},
+   e:{t:tt,o:tt=='dd'?D[l||('x_'+k)]:null,req:g=='f'&&k=='name',get,set:(r,v)=>{if(g=='f')r.f[k]=v;else if(g=='l'){r.l=r.l||{};r.l[k]=v}else{r.x=r.x||{};r.x[k]=v}}}}};
+ cols.push({n:'File',c:1,cls:'k k2',r:r=>'<b>'+E(r.cid)+'</b>'});
+ const nm=mk('f','name','Customer name','text');nm.c=1;nm.cls='k k3';nm.r=r=>'<b>'+E(r.f.name||'')+'</b>';cols.push(nm);
+ const mb=mk('f','mob','Mobile','tel');mb.c=1;mb.r=r=>r.f.mob?E(r.f.mob)+zCallA(r.f.mob):'';cols.push(mb);
+ cols.push({n:'State',c:1,cls:'',r:r=>E(r.state),e:{t:'dd',o:()=>Object.keys(D.states),get:r=>r.state,set:(r,v)=>{r.state=v;if(!(D.states[v]||[]).includes(r.city))r.city=''}}});
+ cols.push({n:'City',c:1,cls:'',r:r=>E(r.city),e:{t:'dd',o:r=>D.states[r.state]||[],get:r=>r.city,set:(r,v)=>{r.city=v}}});
+ CFF.forEach(([k,n,t,l])=>{if(k!='name'&&k!='mob')cols.push(mk('f',k,n,t,l))});
+ cols.push({n:'Docs',c:1,cls:'c',r:r=>{const a=cfNeed(r).length,h=cfHave(r).length;return `<i class="tag ${h==a?'g':'s'}">${h}/${a}</i>`}});
+ CFL.forEach(([k,n,t,l])=>cols.push(mk('l',k,'Loan - '+n,t,l)));
+ D.fields.forEach(f=>cols.push(mk(f.sec=='l'?'l':'x',f.k,f.n,f.t=='dd'?'dd':f.t)));
+ return cols}
+const zCfCells=(r,i)=>`<td class="k k1">${i+1}</td>`+ZF.map((c,x)=>(CFALL||c.c)?`<td class="${c.cls||''}${c.e?' ed':''}" data-c="${x}">${c.r(r)}</td>`:'').join('')+`<td class="k ka"><div class="ab"><button class="sm" onclick="cfView('${r.id}')">View</button><button class="sm nv" onclick="cfOpen('${r.id}')">Edit</button>${ME.admin?`<button class="sm dg" onclick="cfDelId('${r.id}')">Delete</button>`:''}</div></td>`;
+const zCfSum=a=>{const S=k=>a.reduce((t,r)=>t+(+r.f[k]||0),0);return `<span><b>${a.length}</b>customers</span><span><b>${+S('kw').toFixed(1)}</b>kW</span><span><b>${zm(S('cost'))||'₹ 0'}</b>project cost</span><span><b>${zm(S('subr'))||'₹ 0'}</b>subsidy received</span><span><b>${a.filter(r=>cfHave(r).length<cfNeed(r).length).length}</b>docs pending</span>`};
+zTbl.cf={rec:id=>G('files',id),cols:()=>ZF,cells:zCfCells,sum:()=>{const e=$('cf_sum');if(e)e.innerHTML=zCfSum(cfFil())},save:async(r,lab)=>{r.upd=nowT();await cfPut(r);if(SSD)try{cfDetails(r)}catch(x){}try{act('Customer file '+r.cid+' updated: '+lab)}catch(x){}}};
+cfList=function(){const a=cfFil(),b=$('cf_box');if(!b)return;ZF=zFC();
+ b.innerHTML=`<div class="zs" id="cf_sum">${zCfSum(a)}</div><div class="m" style="margin:2px 0 8px">Click any cell to edit it directly. Use Edit for the full form, View to read all details.</div><div class="xl"><table class="xt"><thead><tr><th class="k k1">#</th>${ZF.map(c=>(CFALL||c.c)?`<th class="${c.cls||''}">${E(c.n)}</th>`:'').join('')}<th class="k ka">Actions</th></tr></thead><tbody onclick="zTd(event,'cf')">${a.slice(0,CFN).map((r,i)=>`<tr data-id="${r.id}" data-i="${i}">${zCfCells(r,i)}</tr>`).join('')||`<tr><td colspan="${ZF.length+2}" class="m" style="padding:22px">No customers in this selection.</td></tr>`}</tbody></table></div>${a.length>CFN?`<button class="sm" style="margin-top:8px" onclick="CFN+=300;cfList()">Show more (${a.length-CFN} left)</button>`:''}`};
+function cfView(id){const r=G('files',id);if(!r)return;const D=CD(),row=(n,v)=>`<div class="vr"><span>${E(n)}</span><b>${E(v==null||v===''?'—':String(v))}</b></div>`,f=(t,k,v)=>t=='date'&&v?fd(v):zNumK.has(k)&&v?zm(v):v;
+ bigModal(`<div class="row"><h2 class="sp">${E(r.cid)} – ${E(r.f.name||'')}</h2><button class="sm" onclick="closeM()">Close</button></div><h3>Location</h3><div class="vg">${row('State',r.state)}${row('City',r.city)}</div><h3>Customer details</h3><div class="vg">${CFF.map(([k,n,t])=>row(n,f(t,k,r.f[k]))).join('')}${D.fields.filter(x=>x.sec=='c').map(x=>row(x.n,(r.x||{})[x.k])).join('')}${row('Panel serial numbers',r.f.pan)}</div>${r.l?`<h3>Loan</h3><div class="vg">${CFL.map(([k,n,t])=>row(n,f(t,k,r.l[k]))).join('')}${D.fields.filter(x=>x.sec=='l').map(x=>row(x.n,(r.x||{})[x.k])).join('')}</div>`:''}<h3>Documents <span class="tag ${cfHave(r).length==cfNeed(r).length?'g':'s'}">${cfHave(r).length}/${cfNeed(r).length}</span></h3>${(r.docs||[]).map((d,i)=>`<div class="it" style="padding:5px 0;border-bottom:1px solid var(--bd)"><span>${E(d.t)} – <span class="m">${E(d.n)}</span></span><button class="sm" onclick="cfShow('${r.id}',${i})">Open</button></div>`).join('')||'<div class="m">No documents saved.</div>'}<div class="row" style="margin-top:14px"><button class="btn nv" onclick="closeM();cfOpen('${r.id}')">Edit</button><button class="btn" onclick="closeM()">Close</button></div>`)}
+async function cfDelId(id){const r=G('files',id);if(!r||!ME.admin)return;if(!confirm('Delete '+r.cid+' '+(r.f.name||'')+'? (PC folder is not deleted)'))return;await stDel('files',id);try{act('Customer file deleted: '+r.cid)}catch(x){}draw();toast('Deleted')}
+/* ---- Customers (jobs): same Excel grid ---- */
+const zSp=(v,l)=>v?`<i class="tag ${v=='done'||v=='installed'?'g':v=='progress'||v=='applied'||v=='approved'?'s':''}">${E(l||v)}</i>`:'';
+function zJC(){const t=(n,k,ty,c,x)=>({n,c,cls:(ty=='num'?'r ':'')+(x||''),r:j=>E(j[k]??''),e:{t:ty,get:j=>j[k],set:(j,v)=>{j[k]=v},req:k=='customer'||k=='phone'}}),
+ s=(n,k,o,c,d)=>({n,c,cls:'',r:j=>{const v=j[k]||d;return zSp(v,(zOpt(o).find(a=>a[0]==v)||[])[1])},e:{t:'dd',o,get:j=>j[k]||d,set:(j,v)=>{j[k]=v}}}),
+ cu=t('Customer','customer','text',1,'k k3'),mb=t('Mobile','phone','tel',1);cu.r=j=>'<b>'+E(j.customer)+'</b>';mb.r=j=>E(j.phone)+zCallA(j.phone);
+ return[{n:'ID',c:1,cls:'k k2',r:j=>'<b>'+E(j.cno||'')+'</b>'},cu,mb,t('Alt mobile','alt','tel',0),t('City / area','city','text',1),t('Address','site','text',1),t('kW','kw','num',1),t('Sales person','salesBy','text',1),
+ {n:'Material needed',c:0,cls:'',r:j=>E(needTxt(j)||'')},t('Panel brand','pBrand','text',0),t('Panel Wp','pWp','num',0),t('No. of panels','pN','num',0),t('Inverter','iBrand','text',0),t('Inverter kW','iKw','num',0),
+ s('Fabrication','fabSt',WST,1,'pending'),t('Fab. by','fabName','text',0),t('Fab. date','fabDate','date',0),s('Wiring','wireSt',WST,1,'pending'),t('Wiring by','wireName','text',0),t('Wiring date','wireDate','date',0),
+ s('Net meter','meterSt',[['','Not applied'],['applied','Applied'],['approved','Approved'],['installed','Installed']],0,''),t('Meter no.','meterNo','text',0),t('Meter date','meterDate','date',0),s('Commissioning','comSt',[['','Pending'],['done','Done']],0,''),t('Commission date','comDate','date',0),
+ {n:'Steps',c:1,cls:'c',r:j=>JBSTEPS.map((n,k)=>`<button class="stp ${stepDone(j,k+1)?'on':''}" title="${E(n)}" onclick="jbOpen('${j.id}',${k+1})">${k+1}</button>`).join('')},
+ {n:'Status',c:1,cls:'',r:j=>{const st=jobStat(j);return `<i class="tag ${st=='Complete'?'g':st=='In progress'?'s':''}">${st}</i>`}},t('Note','note','text',0)]}
+const zJCells=(j,i)=>`<td class="k k1">${i+1}</td>`+ZJ.map((c,x)=>(JALL||c.c)?`<td class="${c.cls||''}${c.e?' ed':''}" data-c="${x}">${c.r(j)}</td>`:'').join('')+`<td class="k ka"><div class="ab"><button class="sm" onclick="jbView('${j.id}')">View</button><button class="sm nv" onclick="jbOpen('${j.id}',1)">Edit</button>${canCust()?`<button class="sm dg" onclick="jbDel('${j.id}')">Delete</button>`:''}</div></td>`;
+zTbl.jb={rec:id=>G('jobs',id),cols:()=>ZJ,cells:zJCells,save:async(j,lab)=>{j.upd=nowT();await stSet('jobs',j.id,j);try{act('Customer updated: '+j.customer+' - '+lab)}catch(x){}}};
+jbListHtml=()=>{const r=jbRows();ZJ=zJC();return `<div class="zs"><span><b>${r.length}</b>customers</span><button class="sm" onclick="JALL=!JALL;$('jl_box').innerHTML=jbListHtml()">${JALL?'All columns':'Compact columns'}</button></div><div class="m" style="margin:2px 0 8px">Click any cell to edit it directly. Use Edit for the full form, View to read all details.</div><div class="xl"><table class="xt"><thead><tr><th class="k k1">#</th>${ZJ.map(c=>(JALL||c.c)?`<th class="${c.cls||''}">${E(c.n)}</th>`:'').join('')}<th class="k ka">Actions</th></tr></thead><tbody onclick="zTd(event,'jb')">${r.slice(0,400).map((j,i)=>`<tr data-id="${j.id}" data-i="${i}">${zJCells(j,i)}</tr>`).join('')||`<tr><td colspan="${ZJ.length+2}" class="m" style="padding:22px">No customers in this selection.</td></tr>`}</tbody></table></div>`};
+function jbView(id){const j=G('jobs',id);if(!j)return;const row=(n,v)=>`<div class="vr"><span>${n}</span><b>${E(v==null||v===''?'—':String(v))}</b></div>`,L2=a=>(a||[]).map(p=>p.k+' x '+p.q).join('\n'),wl=v=>(WST.find(a=>a[0]==(v||'pending'))||[])[1],j2=a=>a.filter(Boolean).join(' · ');
+ bigModal(`<div class="row"><h2 class="sp">${E(j.cno||'')} – ${E(j.customer)}</h2><button class="sm" onclick="closeM()">Close</button></div><h3>Customer</h3><div class="vg">${row('Mobile',j.phone)}${row('Alternate mobile',j.alt)}${row('Sales person',j.salesBy)}${row('City / area',j.city)}${row('Address',j.site)}${row('System size (kW)',j.kw)}</div><h3>Material</h3><div class="vg">${row('Panel',j2([j.pBrand,j.pWp&&j.pWp+' Wp',j.pN&&j.pN+' nos']))}${row('Inverter',j2([j.iBrand,j.iKw&&j.iKw+' kW',j.iN&&'qty '+j.iN]))}${row('Pipes',L2(j.pipes))}${row('Other material',L2(j.oth))}${row('Material needed',needTxt(j))}</div><h3>Work</h3><div class="vg">${row('Fabrication',j2([wl(j.fabSt),j.fabBy&&staffName(j.fabBy),j.fabName,j.fabDate&&fd(j.fabDate)]))}${row('Wiring',j2([wl(j.wireSt),j.wireBy&&staffName(j.wireBy),j.wireName,j.wireDate&&fd(j.wireDate)]))}${row('Net meter',j2([j.meterSt,j.meterNo,j.meterDate&&fd(j.meterDate)]))}${row('Commissioning',j2([j.comSt,j.comDate&&fd(j.comDate)]))}${row('Status',jobStat(j))}</div><h3>Serial numbers</h3><div class="vg">${row('Panel serials',j.serP)}${row('Inverter serials',j.serI)}</div>${j.note?`<h3>Note</h3><div class="vg">${row('Note',j.note)}</div>`:''}<div class="row" style="margin-top:14px"><button class="btn nv" onclick="closeM();jbOpen('${id}',1)">Edit</button><button class="btn" onclick="closeM()">Close</button></div>`)}
+</script>
+
 </body></html>
