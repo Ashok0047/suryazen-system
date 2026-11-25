@@ -2366,4 +2366,197 @@ VIEWS.set=function(){_vs9();const m=$('main');if(!m)return;
 Object.assign(window,{fpStart,fpSend,fpDo,mailSave,mailTest,mailOff});
 })();
 </script>
+<style>
+/* ===== CALLING v3 ===== */
+.cx-st{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.04em;padding:3px 10px;border-radius:99px}
+.cx-st.on{background:#d9f0d2;color:#2f6f1f}.cx-st.off{background:#fadbd8;color:#b3261e}
+.cx-cc{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:14px 16px;margin:0 0 12px;border-left:6px solid var(--gr)}
+.cx-cc.off{border-left-color:#c0392b;background:#fffafa}
+.cx-cc h3{margin:0;font-size:17px}.cx-cc .cx-n{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.cx-cc .cx-n span{background:#f2f6f2;border-radius:10px;padding:6px 12px;font-size:12px;color:var(--mut)}.cx-cc .cx-n b{display:block;font-size:18px;color:var(--navy)}
+.cx-cc .row{flex-wrap:wrap;gap:8px}
+.cx-banner{background:#eaf5e6;border:1px solid #cfe5c8;border-radius:12px;padding:10px 14px;margin:8px 0;font-size:13.5px}
+.cx-banner.bad{background:#fff4e5;border-color:#f3d9a8}
+.cx-ed select{min-width:190px;height:34px;margin:0;padding:3px 8px;font-size:13px}.cx-ed input{min-width:170px;height:34px;margin:0;padding:3px 8px;font-size:13px}
+.xt td.cx-w{white-space:normal;min-width:170px;max-width:300px}
+.cx-tabs{margin:12px 0 6px}
+.cx-sec{margin:18px 0 6px;font-size:15px;font-weight:800;color:var(--navy)}
+@media(max-width:700px){
+.cxm .xl{max-height:none;border:0;background:none;overflow:visible}
+.cxm .xt,.cxm .xt tbody{display:block;width:auto;min-width:0}
+.cxm .xt thead{display:none}
+.cxm .xt tr{display:block;background:#fff;border:1px solid var(--bd);border-radius:12px;margin:0 0 10px;padding:6px 12px}
+.cxm .xt td{display:flex;justify-content:space-between;align-items:center;gap:10px;white-space:normal;max-width:none;border:0!important;padding:5px 0;background:none!important;position:static!important;min-width:0!important;text-align:right;overflow:visible}
+.cxm .xt td::before{content:attr(data-l);color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.04em;flex:none;text-align:left}
+.cxm .xt td.k1{display:none}.cxm .xt td.kn{font-size:15px;border-bottom:1px solid var(--bd)!important;padding-bottom:7px}
+.cxm .xt td:empty{display:none}
+.cxm .cx-ed select,.cxm .cx-ed input{min-width:0;width:62%;font-size:16px}
+.cxm .xt td.ka{justify-content:flex-end}.cxm .xt td.ka::before{display:none}
+}
+</style>
+<script>
+/* ===========================================================
+   CALLING v3 – Customers-style tables, campaign start/stop,
+   answered / not-answered tracking, interested Leads tab
+   =========================================================== */
+(()=>{
+const S={V:{dt:'today',from:'',to:''},
+ C:{q:'',camp:'',who:'',st:'',ans:'',sales:'',dt:'',from:'',to:'',lim:200},
+ M:{q:'',camp:'',show:'todo',lim:200},
+ A:{q:'',camp:'',st:'',ans:'',dt:'',from:'',to:'',lim:200},
+ L:{q:'',who:'',sales:'',camp:'',st:'',dt:'',from:'',to:'',lim:200},
+ G:{q:'',who:'',camp:'',st:'',ans:'',dt:'today',from:'',to:'',lim:200}};
+let T='';
+const FILL={};
+const CXP=[['','Any date'],['today','Today'],['yesterday','Yesterday'],['week','Last 7 days'],['month','This month'],['lastmonth','Last month'],['custom','Custom dates']];
+const camp=c=>c.camp||'No campaign';
+const offM=()=>((G('pub','campctl')||{}).off)||{};
+const isOff=c=>!!offM()[camp(c)];
+const ansK=s=>({interested:'yes',notint:'yes',callback:'yes',future:'yes',noans:'no',busy:'no',off:'no',wrong:'wrong'})[s]||'';
+const ansL={yes:'Answered',no:'Not answered',wrong:'Wrong number'};
+const stCol=s=>({pending:'#b8c4cc',interested:'#2f6f1f',notint:'#c0392b',wrong:'#c0392b',future:'#d9a400',callback:'#2f6fb5'})[s]||'#e08a00';
+const tagSt=s=>`<i class="tag ${s=='interested'?'g':s=='notint'||s=='wrong'?'r':s=='future'?'s':s=='callback'?'b':''}">${E(CLS[s]||s||'')}</i>`;
+const tagAns=s=>{const a=ansK(s);return a?`<i class="tag ${a=='yes'?'g':a=='no'?'s':'r'}">${ansL[a]}</i>`:'<span class="m">not called</span>'};
+const campNames=()=>[...new Set(L('clist').map(camp))].sort();
+const callers=()=>staffList().filter(u=>u.dept=='calling');
+const salesU=()=>staffBy('sales');
+const add=(s,n)=>{const x=new Date(s+'T00:00:00');x.setDate(x.getDate()+n);return ymdL(x)};
+function dIn(F,d){if(!F.dt||F.dt=='all')return true;if(!d)return false;d=String(d).slice(0,10);const t=today();
+ if(F.dt=='today')return d==t;if(F.dt=='yesterday')return d==add(t,-1);if(F.dt=='week')return d>=add(t,-6)&&d<=t;
+ if(F.dt=='month')return d.slice(0,7)==t.slice(0,7);
+ if(F.dt=='lastmonth'){const x=new Date();x.setDate(1);x.setMonth(x.getMonth()-1);return d.slice(0,7)==ymdL(x).slice(0,7)}
+ if(F.dt=='custom')return(!F.from||d>=F.from)&&(!F.to||d<=F.to);return true}
+const callLead=l=>l.src!='visit'&&(l.callId||callers().some(u=>u.id==l.by));
+const td=(l,h,c)=>`<td data-l="${l}"${c?` class="${c}"`:''}>${h}</td>`;
+const tbl=(head,rows,empty)=>`<div class="xl"><table class="xt"><thead><tr>${head.map(h=>`<th class="${h[1]||''}">${h[0]}</th>`).join('')}</tr></thead><tbody>${rows||`<tr><td colspan="${head.length}" class="m" style="padding:26px">${empty}</td></tr>`}</tbody></table></div>`;
+const sel=(n,k,t,o,all)=>`<label>${t}<select onchange="cxSet('${n}','${k}',this.value,1)"><option value="">${all||'All'}</option>${o.map(([v,x])=>`<option value="${E(v)}" ${S[n][k]==v?'selected':''}>${E(x)}</option>`).join('')}</select></label>`;
+const dateSel=(n,noAny)=>{const F=S[n];return `<label>Date<select onchange="cxSet('${n}','dt',this.value,1)">${noAny?'':''}${CXP.filter(p=>p[0]||!noAny).map(p=>`<option value="${p[0]}" ${F.dt==p[0]?'selected':''}>${noAny&&!p[0]?'':p[1]}</option>`).join('')}${noAny?`<option value="all" ${F.dt=='all'?'selected':''}>All time</option>`:''}</select></label>${F.dt=='custom'?`<label>From<input type="date" value="${F.from}" onchange="cxSet('${n}','from',this.value,1)"></label><label>To<input type="date" value="${F.to}" onchange="cxSet('${n}','to',this.value,1)"></label>`:''}`};
+const srch=(n,ph)=>`<label>Search<input type="search" placeholder="${ph}" value="${E(S[n].q)}" oninput="cxSet('${n}','q',this.value)" style="margin:0"></label>`;
+const campO=()=>campNames().map(n=>[n,n+(offM()[n]?' (stopped)':'')]);
+const callerO=()=>callers().map(u=>[u.id,u.name]);
+const salesO=()=>salesU().map(u=>[u.id,u.name]);
+const stO=()=>Object.keys(CLS).filter(k=>k!='future'||true).map(k=>[k,CLS[k]]);
+const ansO=[['new','Not called yet'],['yes','Answered'],['no','Not answered'],['wrong','Wrong number']];
+const tabs=(a)=>`<div class="v7tabs cx-tabs">${a.map(([k,n,c])=>`<button class="${T==k?'on':''}" onclick="cxTab('${k}')">${n}${c!=null?` <em>${c}</em>`:''}</button>`).join('')}</div>`;
+const kp=(v,t,c)=>`<div class="zk ${c||''}"><span>${t}</span><b>${v}</b><em>&nbsp;</em></div>`;
+const more=(n,len)=>len>S[n].lim?`<div style="text-align:center;margin:10px"><button class="sm" onclick="cxMore('${n}')">Show 200 more (${len-S[n].lim} left)</button></div>`:'';
+
+/* ---------- actions ---------- */
+function cxSet(n,k,v,full){S[n][k]=v;S[n].lim=200;if(full)draw();else if(FILL[n])FILL[n]()}
+function cxMore(n){S[n].lim+=200;if(FILL[n])FILL[n]()}
+function cxTab(k){T=k;draw()}
+function cxGo(n,k,v,tab){Object.keys(S[n]).forEach(x=>{if(x!='lim'&&x!='show')S[n][x]=''});S[n][k]=v;if(n=='G'||n=='L'){const w=S.V;S[n].dt=w.dt=='all'?'':w.dt;S[n].from=w.from;S[n].to=w.to}T=tab;draw()}
+let CXN=[];
+async function cxToggle(i){const nm=CXN[i];if(nm==null)return;const o=Object.assign({},offM());const nowOff=!o[nm];if(nowOff)o[nm]=nowT();else delete o[nm];await stSet('pub','campctl',{off:o});await act('Campaign "'+nm+'" '+(nowOff?'STOPPED':'started'));draw();toast(nm+(nowOff?' stopped – telecallers will not see it':' is active now ✓'))}
+async function cxOnly(i){const nm=CXN[i];if(nm==null)return;if(!confirm('Run only "'+nm+'"?\nAll other campaigns will be stopped for telecallers.'))return;const o={};CXN.forEach(n=>{if(n!=nm)o[n]=nowT()});await stSet('pub','campctl',{off:o});await act('Only campaign "'+nm+'" is active');draw();toast('Only '+nm+' is active ✓')}
+async function cxReassign(i){const nm=CXN[i],to=val('cxra_'+i);if(!to)return toast('Choose the telecaller');const r=L('clist').filter(c=>camp(c)==nm&&c.status=='pending'),cl=to=='__all'?callers():[{id:to}];if(!r.length)return toast('No pending records');if(!cl.length)return toast('No telecallers');if(!confirm('Move '+r.length+' pending records of "'+nm+'" to '+(to=='__all'?'all telecallers (split equally)':staffName(to))+'?'))return;let k=0;for(const c of r){const x=JSON.parse(JSON.stringify(c));x.caller=cl[k++%cl.length].id;await stSet('clist',x.id,x)}await act('Campaign "'+nm+'": '+r.length+' pending moved → '+(to=='__all'?'all':staffName(to)));draw();toast(r.length+' moved ✓')}
+async function cxDelCamp(i,po){const nm=CXN[i];const r=L('clist').filter(c=>camp(c)==nm&&(!po||c.status=='pending'));if(!r.length)return toast('Nothing to delete');if(!confirm('Delete '+r.length+' '+(po?'pending ':'')+'records of campaign "'+nm+'"?\nThis cannot be undone.'))return;for(const c of r)await stDel('clist',c.id);await act('Campaign "'+nm+'": '+r.length+' records deleted');draw();toast(r.length+' deleted ✓')}
+const ROWS={};
+async function cxDelF(n){const r=(ROWS[n]||[]).filter(c=>ME.admin||c.caller==ME.id);if(!r.length)return toast('Nothing to delete');if(!confirm('Delete ALL '+r.length+' customers shown by the current filter?\nThis cannot be undone.'))return;for(const c of r)await stDel('clist',c.id);await act('Calling list: '+r.length+' customers deleted (filter)');draw();toast(r.length+' deleted ✓')}
+function cxXls(n){const r=(ROWS[n]||[]).map(c=>({Name:c.name,Mobile:c.phone,Address:c.city,KW:c.kw,Campaign:camp(c),Telecaller:staffName(c.caller),Status:CLS[c.status]||c.status,Answer:ansL[ansK(c.status)]||'Not called',Tries:c.tries||'',LastCall:c.ddate||'',FollowUp:c.futDate||'',GivenTo:c.assignedTo?staffName(c.assignedTo):'',Remark:c.note}));if(!r.length)return toast('Nothing to download');dlSheet(r,'Calling_customers_'+today())}
+async function cxSave(id){const s=val('cs_'+id);if(s=='interested')return clLead(id);if(s=='future')return clFuture(id);if(!s||s=='pending')return toast('Choose the call result first');
+ const c0=G('clist',id);if(!c0)return;const c=JSON.parse(JSON.stringify(c0)),n=val('cn_'+id).trim();
+ Object.assign(c,{status:s,note:n,doneBy:ME.id,ddate:today(),dtime:nowT(),tries:(c.tries||0)+1,ans:ansK(s)});
+ const k={id:(c.lead&&c.callId)||uid(),date:today(),ts:nowT(),by:ME.id,name:c.name,phone:c.phone,city:c.city,outcome:s,ans:ansK(s),genuine:!!c.lead,assignedTo:c.assignedTo||'',followDate:'',note:n};c.callId=k.id;
+ await stSet('calls',k.id,k);await stSet('clist',id,c);await act('Call: '+(c.name||c.phone)+' – '+(CLS[s]||s));draw();toast(ansL[ansK(s)]+' · saved ✓');if(s=='notint'||s=='wrong')clAskDel(id)}
+const selOpts=cur=>`<option value="pending" ${cur=='pending'?'selected':''}>— Select result —</option><optgroup label="Call answered"><option value="interested" ${cur=='interested'?'selected':''}>✓ Interested → send to sales</option><option value="notint" ${cur=='notint'?'selected':''}>Not interested</option><option value="callback" ${cur=='callback'?'selected':''}>Call back</option><option value="future" ${cur=='future'?'selected':''}>Future lead (set date)</option></optgroup><optgroup label="Not answered"><option value="noans" ${cur=='noans'?'selected':''}>No answer / not picked</option><option value="busy" ${cur=='busy'?'selected':''}>Busy</option><option value="off" ${cur=='off'?'selected':''}>Switched off</option><option value="wrong" ${cur=='wrong'?'selected':''}>Wrong number</option></optgroup>`;
+
+/* ---------- customers table ---------- */
+function custRows(n,base){const F=S[n],mine=!ME.admin;
+ let r=L('clist').filter(c=>(!mine||c.caller==ME.id)&&(!base||base(c))&&(mine||!F.who||c.caller==F.who)&&(!F.camp||camp(c)==F.camp)&&(!F.st||c.status==F.st)&&(!F.ans||(F.ans=='new'?c.status=='pending':ansK(c.status)==F.ans))&&(!F.sales||c.assignedTo==F.sales)&&dIn(F,c.ddate)&&has6([c.name,c.phone,c.city,c.camp,c.note,c.kw,staffName(c.caller),CLS[c.status]],F.q));
+ r.sort((a,b)=>(a.status=='pending'&&b.status!='pending'?-1:b.status=='pending'&&a.status!='pending'?1:0)||(a.status=='pending'?String(a.ts).localeCompare(String(b.ts)):String(b.dtime||b.ddate||'').localeCompare(String(a.dtime||a.ddate||''))));return r}
+function rowAdm(c,i){const off=isOff(c);
+ return `<tr>${td('#',i+1,'k k1')}${td('Customer',`<b>${E(c.name||'—')}</b>${c.dup?' <i class="tag r">Dup</i>':''}`,'k kn rb" style="--rc:'+stCol(c.status))}${td('Mobile',E(c.phone||'')+zCallA(c.phone))}${td('Address',E(c.city||''),'cx-w')}${td('KW',c.kw?E(c.kw)+' kW':'')}${td('Campaign',E(camp(c))+(off?' <i class="tag r">Stopped</i>':''))}${td('Telecaller',E(staffName(c.caller)))}${td('Status',tagSt(c.status))}${td('Answer',tagAns(c.status))}${td('Tries',c.tries||'')}${td('Last call',c.ddate?fd(c.ddate):'')}${td('Follow-up',c.status=='future'&&c.futDate?'<b'+(futDueC(c)?' style="color:var(--rd)"':'')+'>'+fd(c.futDate)+'</b>':'')}${td('Given to',c.assignedTo?E(staffName(c.assignedTo)):'')}${td('Remark',E(c.note||''),'cx-w')}${td('',`<button class="sm dg" onclick="clDel('${c.id}')">Delete</button>`,'k ka')}</tr>`}
+function rowTel(c,i){const off=isOff(c),due=futDueC(c);
+ const ed=off?`${td('Call result','<span class="m">Campaign stopped</span>')}${td('Remark',E(c.note||''),'cx-w')}${td('','','k ka')}`
+  :`${td('Call result',`<select id="cs_${c.id}" onchange="clPick('${c.id}')">${selOpts(c.status)}</select>`,'cx-ed')}${td('Remark',`<input id="cn_${c.id}" value="${E(c.note||'')}" placeholder="Remark">`,'cx-ed')}${td('',`<button class="sm pri" onclick="cxSave('${c.id}')">Save</button><button class="sm dg" onclick="clDel2('${c.id}')">Delete</button>`,'k ka')}`;
+ return `<tr>${td('#',i+1,'k k1')}${td('Customer',`<b>${E(c.name||'—')}</b>${due?' <i class="tag s">Future due</i>':''}${c.dup?' <i class="tag r">Dup</i>':''}`,'k kn rb" style="--rc:'+stCol(c.status))}${td('Mobile',E(c.phone||'')+zCallA(c.phone))}${td('Address',E(c.city||''),'cx-w')}${td('KW',c.kw?E(c.kw)+' kW':'')}${td('Campaign',E(camp(c)))}${td('Last result',c.status=='pending'?'<span class="m">not called</span>':tagSt(c.status)+(c.ddate?' <span class="m">'+fd(c.ddate)+'</span>':''))}${td('Tries',c.tries||'')}${td('Follow-up',c.status=='future'&&c.futDate?fd(c.futDate):'')}${ed}</tr>`}
+const headAdm=[['#','k k1'],['Customer','k kn'],['Mobile'],['Address / city'],['KW'],['Campaign'],['Telecaller'],['Status'],['Answer'],['Tries'],['Last call'],['Follow-up'],['Given to'],['Remark'],['Actions','k ka']];
+const headTel=[['#','k k1'],['Customer','k kn'],['Mobile'],['Address / city'],['KW'],['Campaign'],['Last result'],['Tries'],['Follow-up'],['Call result'],['Remark'],['Actions','k ka']];
+function fillCust(n){const b=$('cx_box');if(!b)return;const F=S[n],adm=ME.admin&&n=='C',base=n=='M'?mBase():n=='F'?c=>c.status=='future':null,r=custRows(n=='F'?'M':n,base);ROWS[n]=r;
+ const cnt=f=>r.filter(f).length,pend=cnt(c=>c.status=='pending');
+ const sum=`<div class="zs"><span><b>${r.length}</b>customers shown</span><span><b>${pend}</b>not called</span><span><b>${cnt(c=>ansK(c.status)=='yes')}</b>answered</span><span><b>${cnt(c=>ansK(c.status)=='no')}</b>not answered</span><span><b>${cnt(c=>c.status=='interested')}</b>interested</span><span><b>${cnt(c=>c.status=='notint')}</b>not interested</span></div>`;
+ const tools=`<div class="row" style="margin:4px 0 8px;flex-wrap:wrap"><button class="sm" onclick="cxXls('${n}')">Excel download</button>${n!='M'&&n!='F'?`<button class="sm dg" onclick="cxDelF('${n}')">Delete shown (${r.length})</button>`:''}${(n=='A')&&L('clist').some(c=>c.caller==ME.id&&(c.status=='notint'||c.status=='wrong'))?`<button class="sm dg" onclick="clClean()">Delete not interested / wrong</button>`:''}${adm&&L('clist').some(c=>c.dup&&c.status=='pending')?`<button class="sm dg" onclick="clDelDups()">Delete duplicates</button>`:''}</div>`;
+ const lim=S[n=='F'?'M':n].lim;
+ b.innerHTML=sum+tools+`<div class="cxm">${tbl(adm?headAdm:headTel,r.slice(0,lim).map((c,i)=>adm?rowAdm(c,i):rowTel(c,i)).join(''),n=='M'?'Nothing to call right now 🎉':'No customers match.')}</div>`+more(n=='F'?'M':n,r.length)}
+const mBase=()=>{const sh=S.M.show;return c=>!isOff(c)&&(sh=='todo'?callableC(c):sh=='retry'?['noans','busy','off'].includes(c.status):sh=='cb'?c.status=='callback':true)};
+FILL.C=()=>fillCust('C');FILL.M=()=>fillCust(T=='fut'?'F':'M');FILL.A=()=>fillCust('A');
+
+/* ---------- leads (interested) ---------- */
+function leadRows(){const F=S.L,mine=!ME.admin,byC={};L('clist').forEach(c=>{if(c.callId)byC[c.callId]=c});
+ const r=L('leads').filter(callLead).map(l=>({l,c:byC[l.callId]||null})).filter(({l,c})=>(!mine||l.by==ME.id)&&(mine||!F.who||l.by==F.who)&&(!F.sales||l.assignedTo==F.sales)&&(!F.camp||(c?camp(c):'')==F.camp)&&(!F.st||(F.st=='open'?OPEN.includes(l.status):l.status==F.st))&&dIn(F,l.date)&&has6([l.name,l.phone,l.addr,l.city,l.note,l.kw,c&&c.camp,staffName(l.by),staffName(l.assignedTo),LST[l.status]],F.q));
+ r.sort((a,b)=>String(b.l.ts||b.l.date).localeCompare(String(a.l.ts||a.l.date)));return r}
+function fillLeads(){const b=$('cx_box');if(!b)return;const r=leadRows(),T0=today();LDV6={ctx:'cx'};ROWS.L=r;
+ const head=[['#','k k1'],['Customer','k kn'],['Mobile'],['Address / city'],['Required'],['Campaign'],['Telecaller'],['Given to (sales)'],['Lead date'],['Sales status'],['Follow-up'],['Pending'],['Remark'],['Forward'],['Actions','k ka']];
+ const body=r.slice(0,S.L.lim).map(({l,c},i)=>{const p=pendInfo(l),due=OPEN.includes(l.status)&&l.followDate&&l.followDate<=T0;
+  return `<tr>${td('#',i+1,'k k1')}${td('Customer',`<b>${E(l.name||'—')}</b>`,'k kn rb" style="--rc:'+p.c)}${td('Mobile',E(l.phone||'')+zCallA(l.phone))}${td('Address',E([l.addr,l.city||(c&&c.city)].filter(Boolean).join(', ')),'cx-w')}${td('Required',(l.kw||(c&&c.kw))?'<b>'+E(l.kw||c.kw)+' kW</b>':'')}${td('Campaign',c?E(camp(c)):'<span class="m">Added call</span>')}${td('Telecaller',E(staffName(l.by)))}${td('Given to',`<b>${E(staffName(l.assignedTo))}</b>`)}${td('Lead date',fd(l.date))}${td('Sales status',ldTag(l.status))}${td('Follow-up',l.followDate?`<b style="${due?'color:var(--rd)':''}">${fd(l.followDate)}</b>`:'<span class="m">not set</span>')}${td('Pending',`<b style="color:${p.c}">${dh(p.h)}</b>`)}${td('Remark',E(l.note||''),'cx-w')}${td('Forward',ldFwdCell6(l))}${td('',ldAct6(l),'k ka')}</tr>`}).join('');
+ b.innerHTML=`<div class="zs"><span><b>${r.length}</b>interested leads</span><span><b>${r.filter(x=>OPEN.includes(x.l.status)).length}</b>open</span><span><b>${r.filter(x=>x.l.status=='agreed'||x.l.status=='doc_sent').length}</b>accepted</span><span><b>${r.filter(x=>x.l.status=='lost').length}</b>rejected</span><span><b>${r.filter(x=>OPEN.includes(x.l.status)&&x.l.followDate&&x.l.followDate<=T0).length}</b>follow-up due</span></div><div class="row" style="margin:4px 0 8px"><button class="sm" onclick="cxXlsL()">Excel download</button></div><div class="cxm">${tbl(head,body,'No interested leads match.')}</div>`+more('L',r.length)}
+FILL.L=fillLeads;
+function cxXlsL(){const r=(ROWS.L||[]).map(({l,c})=>({Customer:l.name,Mobile:l.phone,Address:[l.addr,l.city].filter(Boolean).join(', '),KW:l.kw||(c&&c.kw)||'',Campaign:c?camp(c):'',Telecaller:staffName(l.by),GivenTo:staffName(l.assignedTo),LeadDate:l.date,Status:LST[l.status]||l.status,FollowUp:l.followDate||'',Remark:l.note}));if(!r.length)return toast('Nothing to download');dlSheet(r,'Interested_leads_'+today())}
+
+/* ---------- call log ---------- */
+function fillLog(){const b=$('cx_box');if(!b)return;const F=S.G,mine=!ME.admin,byC={};L('clist').forEach(c=>{if(c.callId)byC[c.callId]=c});
+ const r=L('calls').filter(c=>(!mine||c.by==ME.id)&&(mine||!F.who||c.by==F.who)&&(!F.st||c.outcome==F.st)&&(!F.ans||ansK(c.outcome)==F.ans)&&(!F.camp||(byC[c.id]?camp(byC[c.id]):'Added calls')==F.camp)&&dIn(F,c.date)&&has6([c.name,c.phone,c.city,c.note,staffName(c.by),staffName(c.assignedTo),OUT[c.outcome]],F.q)).sort((a,b)=>String(b.ts).localeCompare(String(a.ts)));ROWS.G=r;
+ const head=[['#','k k1'],['Date / time','k kn'],['Telecaller'],['Customer'],['Mobile'],['Address'],['Campaign'],['Result'],['Answer'],['Given to'],['Remark'],['Actions','k ka']];
+ const body=r.slice(0,F.lim).map((c,i)=>{const cl=byC[c.id],can=ME.admin||(c.by==ME.id&&c.date==today());
+  return `<tr>${td('#',i+1,'k k1')}${td('When',E(fd(c.date))+' <span class="m">'+E(String(c.ts||'').length>15?new Date(c.ts).toTimeString().slice(0,5):'')+'</span>','k kn')}${td('Telecaller',E(staffName(c.by)))}${td('Customer',`<b>${E(c.name||'—')}</b>`)}${td('Mobile',E(c.phone||'')+zCallA(c.phone))}${td('Address',E(c.city||''),'cx-w')}${td('Campaign',cl?E(camp(cl)):'<span class="m">Added call</span>')}${td('Result',tagSt(c.outcome))}${td('Answer',tagAns(c.outcome))}${td('Given to',c.assignedTo?'<b>'+E(staffName(c.assignedTo))+'</b>':'')}${td('Remark',E(c.note||''),'cx-w')}${td('',can?`<button class="sm dg" onclick="callDel('${c.id}')">Delete</button>`:'','k ka')}</tr>`}).join('');
+ const n=f=>r.filter(f).length;
+ b.innerHTML=`<div class="zs"><span><b>${r.length}</b>calls</span><span><b>${n(c=>ansK(c.outcome)=='yes')}</b>answered</span><span><b>${n(c=>ansK(c.outcome)=='no')}</b>not answered</span><span><b>${n(c=>c.outcome=='interested')}</b>interested</span><span><b>${n(c=>c.genuine)}</b>leads</span></div><div class="cxm">${tbl(head,body,'No calls in this period.')}</div>`+more('G',r.length)}
+FILL.G=fillLog;
+
+/* ---------- admin dashboard ---------- */
+function dashA(){const F=S.V,cl=callers(),cs=L('calls').filter(c=>dIn(F,c.date)),ls=L('leads').filter(l=>callLead(l)&&dIn(F,l.date)),n=(a,f)=>a.filter(f).length,rows=L('clist'),act=n(rows,c=>callableC(c)&&!isOff(c));
+ const per=cl.map(u=>{const c=cs.filter(x=>x.by==u.id),l=ls.filter(x=>x.by==u.id),g={};l.forEach(x=>{g[x.assignedTo]=(g[x.assignedTo]||0)+1});
+  return `<tr style="cursor:pointer" onclick="cxGo('G','who','${u.id}','log')">${td('Telecaller',`<b>${E(u.name)}</b>`,'k kn')}${td('Calls',`<b>${c.length}</b>`)}${td('Answered',n(c,x=>ansK(x.outcome)=='yes'))}${td('Not answered',n(c,x=>ansK(x.outcome)=='no'))}${td('Wrong no.',n(c,x=>x.outcome=='wrong'))}${td('Interested',`<b>${n(c,x=>x.outcome=='interested')}</b>`)}${td('Not interested',n(c,x=>x.outcome=='notint'))}${td('Leads given',`<b>${l.length}</b>`)}${td('Given to',Object.entries(g).map(([k,v])=>E(staffName(k))+' <b>'+v+'</b>').join(' · ')||'<span class="m">—</span>','cx-w')}${td('Left to call',n(rows,x=>x.caller==u.id&&callableC(x)&&!isOff(x)))}</tr>`}).join('');
+ const sp=salesU().map(u=>{const all=L('leads').filter(l=>callLead(l)&&l.assignedTo==u.id),inr=all.filter(l=>dIn(F,l.date));return `<tr style="cursor:pointer" onclick="cxGo('L','sales','${u.id}','leads')">${td('Sales',`<b>${E(u.name)}</b>`,'k kn')}${td('Received (period)',`<b>${inr.length}</b>`)}${td('Total leads',all.length)}${td('Open',n(all,l=>OPEN.includes(l.status)))}${td('Accepted',n(all,l=>l.status=='agreed'||l.status=='doc_sent'))}${td('Rejected',n(all,l=>l.status=='lost'))}${td('Not updated',n(all.filter(l=>OPEN.includes(l.status)),l=>!(l.hist&&l.hist.length)))}</tr>`}).join('');
+ const cp=campNames().map(nm=>{const r=rows.filter(c=>camp(c)==nm),off=!!offM()[nm],dn=r.filter(c=>c.status!='pending'&&dIn(F,c.ddate));return `<tr style="cursor:pointer" onclick="cxGo('C','camp','${E(nm).replace(/'/g,"\\'")}','cust')">${td('Campaign',`<b>${E(nm)}</b>`,'k kn')}${td('Status',off?'<span class="cx-st off">STOPPED</span>':'<span class="cx-st on">ACTIVE</span>')}${td('Records',r.length)}${td('Left to call',n(r,c=>callableC(c)))}${td('Called (period)',dn.length)}${td('Answered',n(dn,c=>ansK(c.status)=='yes'))}${td('Interested',n(dn,c=>c.status=='interested'))}</tr>`}).join('');
+ const act2=campNames().filter(x=>!offM()[x]);
+ return `<div class="cx-banner ${act2.length?'':'bad'}"><b>Active campaigns:</b> ${act2.length?act2.map(E).join(', '):'none – telecallers have nothing to call. Start one in the Campaigns tab.'}${campNames().length>act2.length?` &nbsp;·&nbsp; <b>Stopped:</b> ${campNames().filter(x=>offM()[x]).map(E).join(', ')}`:''}</div>
+ <div class="card"><div class="tb6">${dateSel('V',1)}</div></div>
+ <div class="zks">${kp(cs.length,'Calls made')}${kp(n(cs,c=>ansK(c.outcome)=='yes'),'Answered')}${kp(n(cs,c=>ansK(c.outcome)=='no'),'Not answered','y')}${kp(n(cs,c=>c.outcome=='interested'),'Interested','b')}${kp(ls.length,'Leads given to sales','b')}${kp(act,'Left to call (active)','r')}${kp(n(ls,l=>!l.assignedTo),'Leads not assigned','y')}${kp(n(rows,c=>futDueC(c)),'Future leads due','y')}</div>
+ <div class="cx-sec">Telecaller activity <span class="m">(tap a row to see all their calls)</span></div><div class="cxm">${tbl([['Telecaller','k kn'],['Calls'],['Answered'],['Not answered'],['Wrong no.'],['Interested'],['Not interested'],['Leads given'],['Given to'],['Left to call']],per,'Create Calling logins in Staff first.')}</div>
+ <div class="cx-sec">Campaigns <span class="m">(tap a row to open its customers)</span></div><div class="cxm">${tbl([['Campaign','k kn'],['Status'],['Records'],['Left to call'],['Called (period)'],['Answered'],['Interested']],cp,'No campaign uploaded yet.')}</div>
+ <div class="cx-sec">Sales team – leads from calling <span class="m">(tap a row to open)</span></div><div class="cxm">${tbl([['Sales','k kn'],['Received (period)'],['Total leads'],['Open'],['Accepted'],['Rejected'],['Not updated']],sp,'No sales logins yet.')}</div>`}
+
+/* ---------- admin campaigns ---------- */
+function campsA(){const names=campNames();CXN=names;const cl=callers();
+ return `<div class="cx-banner">Start / stop a campaign here. <b>Stopped</b> campaigns disappear from the telecallers' calling list (data is kept). Example: stop Surat, keep Amreli active.</div>`+(names.map((nm,i)=>{const r=L('clist').filter(c=>camp(c)==nm),off=!!offM()[nm],n=f=>r.filter(f).length,by={};r.forEach(c=>{by[c.caller]=by[c.caller]||[0,0];by[c.caller][0]++;if(callableC(c))by[c.caller][1]++});
+  return `<div class="cx-cc ${off?'off':''}"><div class="row" style="justify-content:space-between"><h3>${E(nm)} <span class="cx-st ${off?'off':'on'}">${off?'STOPPED':'ACTIVE'}</span></h3><div class="row"><button class="btn ${off?'pri':'dg'}" onclick="cxToggle(${i})">${off?'▶ Start campaign':'■ Stop campaign'}</button>${off?'':`<button class="sm" onclick="cxOnly(${i})">Run only this</button>`}</div></div>
+  <div class="cx-n"><span><b>${r.length}</b>records</span><span><b>${n(callableC)}</b>left to call</span><span><b>${n(c=>c.status!='pending')}</b>called</span><span><b>${n(c=>ansK(c.status)=='yes')}</b>answered</span><span><b>${n(c=>ansK(c.status)=='no')}</b>not answered</span><span><b>${n(c=>c.status=='interested')}</b>interested</span><span><b>${n(c=>c.lead)}</b>leads</span></div>
+  <div class="m">Telecallers: ${Object.entries(by).map(([k,v])=>`<b>${E(staffName(k))}</b> ${v[0]} (${v[1]} left)`).join(' · ')}</div>
+  <div class="row" style="margin-top:10px"><button class="sm nv" onclick="cxGo('C','camp','${E(nm).replace(/'/g,"\\'")}','cust')">View customers</button><select id="cxra_${i}" style="width:auto;margin:0"><option value="">Move pending to…</option><option value="__all">All telecallers (split equally)</option>${cl.map(u=>`<option value="${u.id}">${E(u.name)}</option>`).join('')}</select><button class="sm" onclick="cxReassign(${i})">Move</button><button class="sm dg" onclick="cxDelCamp(${i},1)">Delete pending</button><button class="sm dg" onclick="cxDelCamp(${i},0)">Delete campaign</button></div></div>`}).join('')||'<div class="card sub">No campaigns yet – upload an Excel list in the Upload tab.</div>')}
+
+/* ---------- upload ---------- */
+function uploadA(){const cl=callers(),dups=L('clist').filter(c=>c.dup&&c.status=='pending').length;
+ return `<div class="card"><h3 style="margin-top:0">Upload Excel calling list</h3><div class="row" style="flex-wrap:wrap"><select id="cl_who" style="width:auto;margin:0"><option value="">Telecaller…</option><option value="__all">All telecallers (split equally)</option>${cl.map(u=>`<option value="${u.id}">${E(u.name)}</option>`).join('')}</select><input id="cl_camp" list="cx_cl" placeholder="Campaign name (e.g. Surat)" style="width:auto;margin:0"><datalist id="cx_cl">${campNames().map(n=>`<option value="${E(n)}">`).join('')}</datalist><label class="btn pri" style="margin:0">Choose Excel / CSV<input type="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="clPrep(this.files[0]);this.value=''"></label></div><div class="m" style="margin-top:6px">Columns: Name, Mobile, Address/City, KW (optional). Duplicate mobiles are marked. A preview is shown before import. New campaigns start as <b>Active</b>.</div>${dups?`<div class="row" style="margin-top:8px"><button class="sm dg" onclick="clDelDups()">Delete ${dups} duplicates</button></div>`:''}</div>`}
+const _clConfirm=clConfirm;
+clConfirm=async function(){if(!CLP||CLP.who!='__all')return _clConfirm();const cl=callers();if(!cl.length)return toast('No telecallers');const{camp:cn,out}=CLP;let i=0;for(const c of out){c.caller=cl[i%cl.length].id;c.id=uid()+(i++);await stSet('clist',c.id,c)}await act('Campaign "'+cn+'": '+out.length+' records split among '+cl.length+' telecallers');CLP=null;closeM();draw();toast(out.length+' records imported ✓')};
+const _clPrep=clPrep;
+clPrep=async function(f){await _clPrep(f);if(CLP&&CLP.who=='__all'){const m=document.querySelector('#mod .m');if(m)m.textContent='All telecallers (split equally) · '+f.name}};
+
+/* ---------- views ---------- */
+function admin(){const cl=L('clist'),lc=L('leads').filter(callLead).length,all=campNames();if(!['dash','cust','camps','leads','log','up'].includes(T))T='dash';
+ let h=`<div class="dh"><div><h2>Calling</h2><div class="sub">All calling customers, campaigns, telecaller activity and interested leads – search and filter everything.</div></div></div>`+tabs([['dash','Dashboard'],['cust','Customers',cl.length],['camps','Campaigns',all.length],['leads','Leads',lc],['log','Call log'],['up','Upload']]);
+ if(T=='dash')return h+dashA();if(T=='camps')return h+campsA();if(T=='up')return h+uploadA();
+ if(T=='cust')return h+`<div class="card"><div class="tb6">${srch('C','Name / mobile / address / campaign / remark…')}${sel('C','camp','Campaign',campO())}${sel('C','who','Telecaller',callerO())}${sel('C','st','Call status',stO())}${sel('C','ans','Answer',ansO)}${sel('C','sales','Given to (sales)',salesO())}${dateSel('C')}</div></div><div id="cx_box"></div>`;
+ if(T=='leads')return h+`<div class="card"><div class="tb6">${srch('L','Name / mobile / address / campaign / remark…')}${sel('L','camp','Campaign',campO())}${sel('L','who','Telecaller',callerO())}${sel('L','sales','Given to (sales)',salesO())}${sel('L','st','Sales status',[['open','Open (all)']].concat(Object.entries(LST)))}${dateSel('L')}</div></div><div id="cx_box"></div>`;
+ return h+`<div class="card"><div class="tb6">${srch('G','Name / mobile / remark / staff…')}${sel('G','who','Telecaller',callerO())}${sel('G','camp','Campaign',campO().concat([['Added calls','Added calls']]))}${sel('G','st','Result',Object.entries(OUT))}${sel('G','ans','Answer',ansO.slice(1))}${dateSel('G')}</div></div><div id="cx_box"></div>`}
+function tele(){const me=ME.id,mine=L('clist').filter(c=>c.caller==me),T0=today(),cs=L('calls').filter(c=>c.by==me&&c.date==T0),ls=L('leads').filter(l=>l.by==me&&l.date==T0),n=(a,f)=>a.filter(f).length;
+ const todo=n(mine,c=>callableC(c)&&!isOff(c)),fut=n(mine,c=>c.status=='future'),due=n(mine,c=>futDueC(c)&&!isOff(c)),act=campNames().filter(x=>!offM()[x]),myAct=[...new Set(mine.filter(c=>callableC(c)&&!isOff(c)).map(camp))],stopped=n(mine,c=>callableC(c)&&isOff(c));
+ if(!['list','fut','all','leads','log'].includes(T))T='list';
+ let h=`<div class="row"><h2 class="sp">Calling</h2><button class="btn pri" onclick="callForm()">+ Add call</button></div>`+
+ `<div class="zks">${kp(cs.length,'Calls today')}${kp(n(cs,c=>ansK(c.outcome)=='yes'),'Answered')}${kp(n(cs,c=>ansK(c.outcome)=='no'),'Not answered','y')}${kp(n(cs,c=>c.outcome=='interested'),'Interested','b')}${kp(ls.length,'Leads today','b')}${kp(todo,'Left to call','r')}</div>`+
+ `<div class="cx-banner ${myAct.length?'':'bad'}"><b>Calling now:</b> ${myAct.length?myAct.map(E).join(', '):'no active campaign for you – ask admin to start one.'}${stopped?` · <span class="m">${stopped} customers hidden (campaign stopped)</span>`:''}${due?` · <b style="color:#b54708">${due} future lead${due>1?'s':''} due</b>`:''}</div>`+
+ tabs([['list','To call',todo],['fut','Future leads',fut],['all','All my customers',mine.length],['leads','My leads',L('leads').filter(l=>l.by==me).length],['log','My calls']]);
+ if(T=='list')return h+`<div class="card"><div class="tb6">${srch('M','Name / mobile / address…')}${sel('M','camp','Campaign',campO().filter(x=>!offM()[x[0]]))}<label>Show<select onchange="cxSet('M','show',this.value,1)">${[['todo','To call (new + future due)'],['retry','Retry – not answered'],['cb','Call back'],['all','All active']].map(([v,t])=>`<option value="${v}" ${S.M.show==v?'selected':''}>${t}</option>`).join('')}</select></label></div></div><div id="cx_box"></div>`;
+ if(T=='fut'){return h+`<div class="card"><div class="tb6">${srch('M','Name / mobile / address…')}${sel('M','camp','Campaign',campO())}</div></div><div id="cx_box"></div>`}
+ if(T=='all')return h+`<div class="card"><div class="tb6">${srch('A','Name / mobile / address / remark…')}${sel('A','camp','Campaign',campO())}${sel('A','st','Call status',stO())}${sel('A','ans','Answer',ansO)}${dateSel('A')}</div></div><div id="cx_box"></div>`;
+ if(T=='leads')return h+`<div class="card"><div class="tb6">${srch('L','Name / mobile / address / remark…')}${sel('L','camp','Campaign',campO())}${sel('L','sales','Given to (sales)',salesO())}${sel('L','st','Sales status',[['open','Open (all)']].concat(Object.entries(LST)))}${dateSel('L')}</div></div><div id="cx_box"></div>`;
+ return h+`<div class="card"><div class="tb6">${srch('G','Name / mobile / remark…')}${sel('G','st','Result',Object.entries(OUT))}${sel('G','ans','Answer',ansO.slice(1))}${dateSel('G')}</div></div><div id="cx_box"></div>`}
+VIEWS.calls=VIEWS.tele=function(){$('main').innerHTML=ME.admin?admin():tele();
+ if(T=='cust')fillCust('C');else if(T=='leads')fillLeads();else if(T=='log')fillLog();
+ else if(!ME.admin){if(T=='list')fillCust('M');else if(T=='fut')fillCust('F');else if(T=='all')fillCust('A')}};
+Object.assign(window,{cxSet,cxMore,cxTab,cxGo,cxToggle,cxOnly,cxReassign,cxDelCamp,cxDelF,cxXls,cxXlsL,cxSave});
+})();
+</script>
 </body></html>
