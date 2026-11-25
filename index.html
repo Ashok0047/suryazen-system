@@ -2286,4 +2286,84 @@ img,canvas,video{max-width:100%}
  .zks{grid-template-columns:repeat(4,minmax(0,1fr))!important}
 }
 </style>
+<script>
+/* ---- v9: Admin "Forgot password" -> 6-digit code on recovery email (via EmailJS) ---- */
+(()=>{
+const MAIL=()=>G('adm','mail')||{email:'',svc:'',tpl:'',key:''};
+const okMail=m=>!!(m&&m.email&&m.svc&&m.tpl&&m.key);
+const mask=e=>{const p=String(e||'').split('@');return p.length>1?p[0].slice(0,2)+'***@'+p[1]:'***'};
+const FP_WAIT=60000,FP_LIFE=600000,FP_TRIES=5;
+let FP=null,FPE='';   /* FP = {h,salt,exp,tries}: lives only in memory, never saved anywhere */
+function rnd6(){const a=new Uint32Array(1);do{crypto.getRandomValues(a)}while(a[0]>=4294000000);return String(a[0]%1000000).padStart(6,'0')}
+function friendly(x){const s=String((x&&x.message)||x||'');
+ if(/Failed to fetch|NetworkError|Load failed/i.test(s))return 'No internet, or an ad-blocker is blocking emailjs.com';
+ if(/service_id|template_id|user_id|public key|account not found|not found/i.test(s))return 'EmailJS Service ID / Template ID / Public Key is wrong';
+ if(/Gmail_API|invalid_grant|reconnect|authenticat/i.test(s))return 'Gmail connection in EmailJS expired – reconnect Gmail in EmailJS';
+ return s.slice(0,140)}
+async function sendMail(m,to,code){
+ const co=(()=>{try{return SET().co.name}catch(e){return ''}})()||'SURYAZEN SOLAR';
+ const r=await fetch('https://api.emailjs.com/api/v1.0/email/send',{method:'POST',headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({service_id:m.svc,template_id:m.tpl,user_id:m.key,template_params:{to_email:to,email:to,code,minutes:Math.round(FP_LIFE/60000),company:co}})});
+ const t=await r.text();if(!r.ok)throw new Error(t||('HTTP '+r.status));return true}
+
+/* ---------- login screen: Forgot password -> email code ---------- */
+function fpStart(msg){const m=MAIL();
+ if(!okMail(m))return modal(`<h2>Forgot password</h2><p class="sub">Email recovery is not set up yet. The admin can turn it on in Settings → <b>Admin recovery email</b> (after logging in).</p><div class="row" style="margin-top:12px"><button class="btn pri sp" onclick="recForm()">Use recovery code / Authenticator</button><button class="btn" onclick="closeM()">Close</button></div>`);
+ modal(`<h2>Forgot password</h2>${msg?`<div class="card bad">${E(msg)}</div>`:''}<p class="sub">Enter your admin email. A 6-digit code will be sent to it.</p><label>Admin email<input id="fp_e" type="email" autocomplete="off" autocapitalize="none"></label><div class="row" style="margin-top:12px"><button class="btn pri sp" onclick="fpSend()">Send code</button><button class="btn" onclick="closeM()">Cancel</button></div><p class="sub" style="margin-top:10px"><a href="#" onclick="recForm();return false">Use recovery code / Authenticator instead</a></p>`)}
+function fpStep2(e,msg){FPE=e;
+ modal(`<h2>Enter the code</h2>${msg?`<div class="card bad">${E(msg)}</div>`:''}<p class="sub">If <b>${E(mask(e))}</b> is the admin email, a 6-digit code has been sent. It works for 10 minutes. Also check Spam / Promotions.</p><label>6-digit code<input id="fp_c" inputmode="numeric" maxlength="6" autocomplete="one-time-code"></label><label>New password (min 6)<input id="fp_p" type="password" autocomplete="new-password"></label><label>Repeat new password<input id="fp_p2" type="password" autocomplete="new-password"></label><div class="row" style="margin-top:12px"><button class="btn pri sp" onclick="fpDo()">Reset password</button><button class="btn" onclick="fpStart()">Resend / change email</button></div><div class="row" style="margin-top:6px"><button class="btn" onclick="closeM()">Cancel</button></div>`)}
+async function fpSend(){
+ if(lockOn())return fpStart('Too many wrong attempts – wait 5 minutes');
+ const m=MAIL(),e=val('fp_e').trim().toLowerCase();
+ if(!/^\S+@\S+\.\S+$/.test(e))return fpStart('Enter a valid email address');
+ if(e!==String(m.email).trim().toLowerCase()){lockSet();FP=null;return fpStep2(e)}   /* same screen as success: do not reveal which email is right */
+ const wait=FP_WAIT-(Date.now()-(+localStorage.getItem('szFpT')||0));
+ if(wait>0)return fpStart('Please wait '+Math.ceil(wait/1000)+' seconds before asking for a new code');
+ const code=rnd6(),salt=newSalt(),h=await hashPw(code,salt);
+ try{await sendMail(m,String(m.email).trim(),code)}catch(x){FP=null;return fpStart('Could not send the email: '+friendly(x))}
+ localStorage.setItem('szFpT',String(Date.now()));
+ FP={h,salt,exp:Date.now()+FP_LIFE,tries:0};fpStep2(e)}
+async function fpDo(){
+ if(lockOn())return fpStep2(FPE,'Too many wrong attempts – wait 5 minutes');
+ const c=val('fp_c').replace(/\s/g,''),p=val('fp_p');
+ if(!/^\d{6}$/.test(c))return fpStep2(FPE,'Enter the 6-digit code');
+ if(p.length<6)return fpStep2(FPE,'Password must be at least 6 characters');
+ if(p!==val('fp_p2'))return fpStep2(FPE,'The two passwords do not match');
+ let ok=false;if(FP&&Date.now()<=FP.exp&&FP.tries<FP_TRIES){FP.tries++;ok=await hashPw(c,FP.salt)===FP.h}
+ if(!ok){lockSet();if(FP&&FP.tries>=FP_TRIES)FP=null;return fpStep2(FPE,'Wrong or expired code')}
+ FP=null;localStorage.removeItem('szFail');
+ const salt=newSalt();
+ try{await stSet('adm','auth',{salt,h:await hashPw(p,salt)})}catch(x){return fpStep2(FPE,'Could not save the new password. Try again.')}
+ try{await act('Admin password reset with email code')}catch(x){}
+ closeM();LOGIN_TAB='admin';loginScreen();toast('Password reset ✓ – login with the new password')}
+
+/* ---------- Settings: recovery email card ---------- */
+function mailCard(){const m=MAIL();
+ return `<div class="card" id="mailcard"><h3 style="margin-top:0">Admin recovery email (forgot password)</h3><p class="sub">${okMail(m)?'<b>On.</b> "Forgot password?" on the admin login sends a 6-digit code to <b>'+E(mask(m.email))+'</b>.':'<b>Off.</b> Fill the boxes below and press Save. A free EmailJS account is enough (200 emails a month).'}</p>
+ <label>Recovery email (the code is sent here)<input id="ml_e" type="email" autocapitalize="none" value="${E(m.email)}"></label>
+ <div class="r3"><label>EmailJS Service ID<input id="ml_s" autocapitalize="none" value="${E(m.svc)}"></label><label>EmailJS Template ID<input id="ml_t" autocapitalize="none" value="${E(m.tpl)}"></label><label>EmailJS Public Key<input id="ml_k" autocapitalize="none" value="${E(m.key)}"></label></div>
+ <div class="row"><button class="btn pri" onclick="mailSave()">Save</button><button class="btn" onclick="mailTest()">Send test email</button>${m.email?'<button class="btn" onclick="mailOff()">Turn off</button>':''}</div>
+ <details style="margin-top:10px"><summary class="m" style="cursor:pointer">How to set up EmailJS (5 minutes, once)</summary><div class="m" style="margin-top:6px;line-height:1.55">1. Open <b>emailjs.com</b> → Sign up (free).<br>2. <b>Email Services</b> → Add New Service → Gmail → connect your Gmail → copy the <b>Service ID</b>.<br>3. <b>Email Templates</b> → Create New Template. Set <b>To Email</b> = <code>{{to_email}}</code>, Subject = <code>SURYAZEN admin reset code</code>, Content = <code>Your 6-digit code is {{code}}. It is valid for {{minutes}} minutes. If you did not ask for it, ignore this email.</code> → Save → copy the <b>Template ID</b>.<br>4. <b>Account → General</b> → copy the <b>Public Key</b>.<br>5. Paste the 3 values above, type your email, press <b>Save</b>, then <b>Send test email</b>.</div></details></div>`}
+const mailVals=()=>({email:val('ml_e').trim(),svc:val('ml_s').trim(),tpl:val('ml_t').trim(),key:val('ml_k').trim()});
+async function mailSave(){const v=mailVals();
+ if(!/^\S+@\S+\.\S+$/.test(v.email))return toast('Enter a valid email');
+ if(!v.svc||!v.tpl||!v.key)return toast('Fill Service ID, Template ID and Public Key');
+ v.ts=nowT();try{await stSet('adm','mail',v)}catch(e){return toast('Could not save')}
+ await act('Admin recovery email set');toast('Saved ✓ – now press "Send test email"');draw()}
+async function mailTest(){const v=mailVals();
+ if(!/^\S+@\S+\.\S+$/.test(v.email)||!v.svc||!v.tpl||!v.key)return toast('Fill all 4 boxes first');
+ toast('Sending…');try{await sendMail(v,v.email,'123456 (test)');toast('Test email sent ✓ – check inbox / spam')}catch(x){toast('Failed: '+friendly(x))}}
+async function mailOff(){if(!confirm('Turn off email recovery?'))return;
+ await stSet('adm','mail',{email:'',svc:'',tpl:'',key:'',ts:nowT()});await act('Admin recovery email turned off');draw()}
+
+/* ---------- hook into existing screens ---------- */
+const _ls9=loginScreen;
+loginScreen=function(msg){_ls9(msg);const b=[...document.querySelectorAll('.login button')].find(x=>/Forgot password/i.test(x.textContent));if(b)b.setAttribute('onclick','fpStart()')};
+const _vs9=VIEWS.set;
+VIEWS.set=function(){_vs9();const m=$('main');if(!m)return;
+ const h=[...m.querySelectorAll('h3')].find(x=>x.textContent.trim()=='Admin password'),host=h&&h.closest('.card'),t=document.createElement('div');
+ t.innerHTML=mailCard();const c=t.firstElementChild;if(host)host.after(c);else m.appendChild(c)};
+Object.assign(window,{fpStart,fpSend,fpDo,mailSave,mailTest,mailOff});
+})();
+</script>
 </body></html>
