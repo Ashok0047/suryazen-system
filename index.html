@@ -1350,7 +1350,7 @@ VIEWS.dash=()=>{const s=stats(),all=CU().filter(zGeoRec),act=!!(CFQ.s||CFQ.c),gf
  done=f=>f.status=='complete'||f.status=='submitted',selB=s.by(s.quotes,q=>q.by),fileB=s.by(s.files,f=>f.salesId||'—'),mvB=s.by(s.moves.filter(m=>m.type=='out'),m=>m.to||'—');
  $('main').innerHTML=`<div class="dh"><div><h2>Dashboard</h2><div class="sub"> ${E(act?(CFQ.c?CFQ.s+' › '+CFQ.c:CFQ.s):'All states &amp; cities')}</div></div><button class="btn nv" onclick="dayReport()">End-of-day report</button></div>${rangeBar()}${geoBar()}
  <div class="dg"><div class="dm"><div class="zks">${K('',all.length,'Customers (files)')}${K('',s.calls.length,'Calls made','b')}${K('',s.calls.filter(c=>c.genuine).length,'Genuine leads','b')}${K('✓',s.agreed.length,'Customers agreed')}${K('',s.quotes.length,'Quotations made','y')}${K('',inr(qv),'Quotation value','y')}${K('',inr(s.quotes.reduce((t,r)=>t+((qProfit(r)||{}).profit||0),0)),'Estimated profit')}${K('',s.files.length,'Files registered')}</div>
- <div class="two">${zBars(!CFQ.s?zGrp(all,r=>r.state):!CFQ.c?zGrp(all,r=>r.city):zGrp(all,r=>r.f.wby),!CFQ.s?'Customers by state':!CFQ.c?'Customers by city':'Customers by work-by')}${zDonut(zGrp(all,r=>r.f.st),'Customer status')}${zDonut(zGrp(all,r=>r.f.ws),'Work status')}${zBars(zGrp(all.filter(r=>r.l),r=>r.l.app),'Loan files by bank')}</div>
+ <div class="two">${zBars(!CFQ.s?zGrp(all,r=>r.state):!CFQ.c?zGrp(all,r=>r.city):zGrp(all,r=>r.sales||'—'),!CFQ.s?'Customers by state':!CFQ.c?'Customers by city':'Customers by sales person')}${zDonut(zGrp(all,r=>r.f.st),'Customer status')}${zDonut(zGrp(all,r=>r.f.ws),'Work status')}${zBars(zGrp(all.filter(r=>r.l),r=>r.l.app),'Loan files by bank')}</div>
  <div class="two">${zTb('Calling',['Caller','Calls','Interested','Genuine'],Object.entries(s.by(s.calls,c=>c.by)).map(([k,a])=>[E(staffName(k)),a.length,a.filter(c=>c.outcome=='interested').length,a.filter(c=>c.genuine).length]),'No calls in this period.')}
  ${zTb('Salespeople',['Name','Leads','Following','Agreed','Lost','Quotes','Value'],staffBy('sales').map(u=>{const ls=s.leads.filter(l=>l.assignedTo==u.id),q=selB[u.id]||[];return[E(u.name),ls.filter(l=>inRange(l.date)).length,ls.filter(l=>l.status=='following'||l.status=='new').length,ls.filter(l=>l.status=='agreed').length,ls.filter(l=>l.status=='lost').length,q.length,inr(q.reduce((t,x)=>t+(+x.final||0),0))]}),'No sales staff yet.')}
  ${zTb('Documents by salesperson',['Brought by','Files','Complete','Pending'],Object.entries(fileB).map(([k,a])=>[E(staffName(k)),a.length,a.filter(done).length,a.filter(f=>!done(f)).length]),'No files in this period.')}
@@ -1447,7 +1447,7 @@ VIEWS.dash=()=>{const s=stats(),all=CU().filter(zGeoRec),act=!!(CFQ.s||CFQ.c),gf
  <div class="flt">${rangeBar()}${geoBar()}</div>
  <div class="dg"><div class="dm"><div class="zks">${K(all.length,'Customers','','Installed capacity '+(+kw.toFixed(1))+' kW')}${K(s.calls.length,'Calls made','b',s.calls.filter(c=>c.outcome=='interested').length+' interested')}${K(s.calls.filter(c=>c.genuine).length,'Genuine leads','b')}${K(s.agreed.length,'Customers agreed')}${K(s.quotes.length,'Quotations made','y')}${K(inr(qv),'Quotation value','y')}${K(inr(s.quotes.reduce((t,r)=>t+((qProfit(r)||{}).profit||0),0)),'Estimated profit')}${K(s.files.length,'Files registered','r',pend+' documents pending')}</div>
  <div class="g21">${zTrend()}${zDonut(zGrp(all,r=>r.f.st),'Customer status')}</div>
- <div class="g3">${zBars(!CFQ.s?zGrp(all,r=>r.state):!CFQ.c?zGrp(all,r=>r.city):zGrp(all,r=>r.f.wby),!CFQ.s?'Customers by state':!CFQ.c?'Customers by city':'Customers by work-by')}${zDonut(zGrp(all,r=>r.f.ws),'Work status')}${zBars(zGrp(all.filter(r=>r.l),r=>r.l.app),'Loan files by bank')}</div>
+ <div class="g3">${zBars(!CFQ.s?zGrp(all,r=>r.state):!CFQ.c?zGrp(all,r=>r.city):zGrp(all,r=>r.sales||'—'),!CFQ.s?'Customers by state':!CFQ.c?'Customers by city':'Customers by sales person')}${zDonut(zGrp(all,r=>r.f.ws),'Work status')}${zBars(zGrp(all.filter(r=>r.l),r=>r.l.app),'Loan files by bank')}</div>
  <div class="two">${zTb('Calling',['Caller','Calls','Interested','Genuine'],Object.entries(s.by(s.calls,c=>c.by)).map(([k,a])=>[E(staffName(k)),a.length,a.filter(c=>c.outcome=='interested').length,a.filter(c=>c.genuine).length]),'No calls in this period.')}
  ${zTb('Sales team',['Name','Leads','Following','Agreed','Lost','Quotes','Value'],staffBy('sales').map(u=>{const ls=s.leads.filter(l=>l.assignedTo==u.id),q=selB[u.id]||[];return[E(u.name),ls.filter(l=>inRange(l.date)).length,ls.filter(l=>l.status=='following'||l.status=='new').length,ls.filter(l=>l.status=='agreed').length,ls.filter(l=>l.status=='lost').length,q.length,inr(q.reduce((t,x)=>t+(+x.final||0),0))]}),'No sales staff yet.')}
  ${zTb('Documents by salesperson',['Brought by','Files','Complete','Pending'],Object.entries(fileB).map(([k,a])=>[E(staffName(k)),a.length,a.filter(done).length,a.filter(f=>!done(f)).length]),'No files in this period.')}
@@ -1798,7 +1798,7 @@ VIEWS.dash=()=>{const s=stats(),D=CD(),all=CU().filter(zGeoRec),act=!!(CFQ.s||CF
  <div class="g3"><div class="card"><div class="ch"><h4>Customer pipeline</h4></div>${v6Fun(stOrd,PL)||'<div class="m">No data.</div>'}</div>
   <div class="card"><div class="ch"><h4>Installations – last 6 months (kW)</h4></div>${mKw.some(x=>x)?v6Cols2(mths.map(m=>MN6[+m.slice(5)-1]),mKw,'#2b7f3e'):'<div class="m" style="padding:30px 0">No installation dates entered yet.</div>'}<div class="m">${mN.reduce((a,b)=>a+b,0)} installations in this window</div></div>
   <div class="card"><div class="ch"><h4>Lead funnel</h4></div>${v6Fun(lfun,['#2f6fb5','#2f6fb5','#7a5cc4','#7a5cc4','#d9a21f','#d9a21f','#d9a21f','#2b7f3e','#2b7f3e','#c0392b'])}</div></div>
- <div class="g3">${zDonut(zGrp(all,r=>r.f.ws),'Work status')}${zBars(!CFQ.s?zGrp(all,r=>r.state):!CFQ.c?zGrp(all,r=>r.city):zGrp(all,r=>r.f.wby),!CFQ.s?'Customers by state':!CFQ.c?'Customers by city':'Customers by work-by')}${zBars(zGrp(all.filter(r=>r.l),r=>r.l.app),'Loan files by bank')}</div>
+ <div class="g3">${zDonut(zGrp(all,r=>r.f.ws),'Work status')}${zBars(!CFQ.s?zGrp(all,r=>r.state):!CFQ.c?zGrp(all,r=>r.city):zGrp(all,r=>r.sales||'—'),!CFQ.s?'Customers by state':!CFQ.c?'Customers by city':'Customers by sales person')}${zBars(zGrp(all.filter(r=>r.l),r=>r.l.app),'Loan files by bank')}</div>
  <div class="two"><div class="card"><div class="ch"><h4>Pending leads – how long waiting</h4><a class="m" style="cursor:pointer" onclick="VIEW='pend';shell()">Open list →</a></div><div class="age"><div class="a1"><b>${a1}</b><span>under 24h</span></div><div class="a2"><b>${a2}</b><span>1 – 2 days</span></div><div class="a3"><b>${a3}</b><span>2 – 3 days</span></div><div class="a4"><b>${a4}</b><span>3 days +</span></div></div></div>
   <div class="card"><div class="ch"><h4>Low stock</h4><a class="m" style="cursor:pointer" onclick="VIEW='stock';shell()">Open stock →</a></div>${low.slice(0,6).map(i=>`<div class="it" style="padding:5px 0;border-bottom:1px solid var(--bd)"><span>${E(i.name)}</span><b style="color:var(--rd)">${stockQty(i)} / min ${i.min} ${E(i.unit)}</b></div>`).join('')||'<div class="m">All items above minimum.</div>'}</div></div>
  <div class="two">${zBars(byItem,'Stock issued – top items (qty)')}${zBars(byCust,'Stock issued – top customers / sites (entries)')}</div>
@@ -1987,7 +1987,7 @@ v6Fil=function(){const q=CFQ.q,loan=V7TAB=='loan';
  return CU().filter(r=>(!loan||r.l)&&(!CFQ.s||r.state==CFQ.s)&&(!CFQ.c||r.city==CFQ.c)&&(!CFQ.wby||r.f.wby==CFQ.wby)&&(!CFQ.st||r.f.st==CFQ.st)&&(!CFQ.ws||r.f.ws==CFQ.ws)
  &&(loan||!CFQ.loan||(CFQ.loan=='y'?!!r.l:!r.l))&&(!CFQ.lst||(r.l&&r.l.lst==CFQ.lst))&&(!CFQ.app||(r.l&&r.l.app==CFQ.app))&&(!CFQ.lwby||(r.l&&r.l.lwby==CFQ.lwby))
  &&(!CFQ.doc||(CFQ.doc=='ok'?!v7Pend(r).length:CFQ.doc=='no'?v7Pend(r).length>0:CFQ.doc.startsWith('miss:')?v7Pend(r).includes(CFQ.doc.slice(5)):true))
- &&(!CFQ.sp||r.sales==CFQ.sp)&&(!CFQ.wk||jobStat(v6VJob(r))==CFQ.wk)
+ &&(!CFQ.sp||r.sales==CFQ.sp)&&(!CFQ.dsb||dsbKey(r)==CFQ.dsb)&&(!CFQ.wk||jobStat(v6VJob(r))==CFQ.wk)
  &&has6([r.cid,r.f.name,r.f.mob,r.f.addr,r.f.cno,r.city,r.state,r.sales,r.f.rem,r.f.dcr,r.f.pm,r.f.inv,r.f.imm,r.f.div,r.f.sub,r.f.mq,r.l&&r.l.app,r.l&&r.l.lst],q)).sort((a,b)=>(b.ts||'').localeCompare(a.ts||''))};
 const v7Fil=()=>v6Fil();
 
@@ -1998,7 +1998,7 @@ function v7CustCols(rows){const D=CD(),cols=[],CPS=new Set(['imm','date','wby','
  cols.push({n:'FILE',c:1,cls:'k kn',r:r=>`<b>${E(r.cid)}</b><div class="sm2">${E(r.city||'')}</div>`});
  const loanCol={n:'LOAN',c:1,cls:'',r:r=>r.l?`<i class="tag ln">YES</i> ${E([r.l.app,r.l.lst].filter(Boolean).join(' · '))}`:'<i class="tag">No</i>',e:{t:'dd',o:()=>[['y','Yes'],['n','No']],get:r=>r.l?'y':'n',set:(r,v)=>v8LoanSet(r,v=='y')}};
   CFF.forEach(([k,n,t,l])=>{
-  if(k=='wp'||k=='inv')return;
+  if(k=='wp'||k=='inv')return;if(k=='wby'){cols.push(loanCol);return}
   if(k=='kw')cols.push({n:'CAPACITY',c:0,cls:'',r:r=>{const c=v7Cap(r);return c===''?'':E(c)+' kW'}});
   else if(k=='np')cols.push({n:'PANELS (Nos × Wp)',c:1,cls:'tx',open:1,r:v6Pnl});
   else if(k=='pay')cols.push({n:'PAYMENT AFTER SUBSIDY',c:1,cls:'',r:r=>{const p=v7Pay(r);return p===''?'':'<b>'+zm(p)+'</b>'}});
@@ -2035,8 +2035,8 @@ function v7LoanCols(){const D=CD(),cols=[],cl=k=>CFL.find(a=>a[0]==k),cf=k=>CFF.
 
 let V7C=[];
 const v7Cells=(r,i)=>`<td class="k k1">${i+1}</td>`+V7C.map((c,x)=>v8Vis(c)?`<td class="${c.cls||''}${c.e?' ed':''} ${c.cl||''}" data-c="${x}"${c.open?` onclick="cfOpen('${r.id}')"`:''}>${c.r(r)}</td>`:'').join('')+`<td class="k ka"><div class="ab"><button class="sm" onclick="cfView('${r.id}')">View</button><button class="sm nv" onclick="cfOpen('${r.id}')">Edit</button>${ME.admin?`<button class="sm dg" onclick="cfDelId('${r.id}')">Delete</button>`:''}</div></td>`;
-const v7Sum=a=>{const S=k=>a.reduce((t,r)=>t+(+r.f[k]||0),0),kp=a.reduce((t,r)=>t+(+v7Cap(r)||0),0),SL=k=>a.reduce((t,r)=>t+((r.l&&+r.l[k])||0),0),M=n=>zm(n)||'₹ 0',dp=a.filter(r=>v7Pend(r).length).length;
- if(V7TAB=='loan')return `<span><b>${a.length}</b>loan customers</span><span><b>${M(SL('lamt'))}</b>loan amount</span><span><b>${M(SL('sa'))}</b>sanctioned</span><span><b>${M(SL('da'))}</b>disbursed</span><span><b>${dp}</b>docs pending</span>`;
+const v7Sum=a=>v10Sum(a,v7Sum0(a));const v7Sum0=a=>{const S=k=>a.reduce((t,r)=>t+(+r.f[k]||0),0),kp=a.reduce((t,r)=>t+(+v7Cap(r)||0),0),SL=k=>a.reduce((t,r)=>t+((r.l&&+r.l[k])||0),0),M=n=>zm(n)||'₹ 0',dp=a.filter(r=>v7Pend(r).length).length;
+ if(V7TAB=='loan')return `<span><b>${a.length}</b>loan customers</span><span><b>${M(SL('lamt'))}</b>loan amount</span><span><b>${M(SL('sa'))}</b>sanctioned</span><span><b>${M(SL('da')+SL('t1')+SL('t2'))}</b>disbursed</span><span><b>${dp}</b>docs pending</span>`;
  return `<span><b>${a.length}</b>customers</span><span><b>${+kp.toFixed(1)}</b>kW capacity</span><span><b>${M(S('cost'))}</b>project cost</span><span><b>${M(S('ssub'))}</b>state subsidy</span><span><b>${M(S('subr'))}</b>central subsidy</span><span><b>${M(a.reduce((t,r)=>t+(+v7With(r)||0),0))}</b>payment with subsidy</span><span><b>${M(a.reduce((t,r)=>t+(+v7Pay(r)||0),0))}</b>payment after subsidy</span><span><b>${a.filter(r=>r.l).length}</b>with loan</span><span><b>${dp}</b>docs pending</span><span><b>${a.filter(r=>jobStat(v6VJob(r))!='Complete').length}</b>work pending</span>`};
 const v7Save=async(r,lab)=>{v7Norm(r);r.upd=nowT();await cfPut(r);try{const e=document.querySelectorAll('.v7tabs em');if(e.length>1){e[0].textContent=CU().length;e[1].textContent=CU().filter(x=>x.l).length}}catch(x){}try{await v6SyncJob(r,false)}catch(x){}if(SSD)try{cfDetails(r)}catch(x){}try{act('Customer '+r.cid+' updated: '+lab)}catch(x){}};
 zTbl.cf={rec:id=>G('files',id),cols:()=>V7C,cells:v7Cells,sum:()=>{const e=$('cf_sum');if(e)e.innerHTML=v7Sum(v7Fil())},save:v7Save};
@@ -2060,7 +2060,7 @@ cfList=function(){const a=v7Fil(),b=$('cf_box');if(!b)return;const loan=V7TAB=='
  b.innerHTML=head+`<div class="xl"><table class="xt fit"><thead><tr><th class="k k1">#</th>${V7C.map((c,x)=>v8Vis(c)?`<th class="${(c.hcls||(c.cls||'').replace(/\b(tx|wrap2?)\b/g,'')).trim()} ${c.cl||''}">${c.hdr||E(c.n)}${v8Hd(c)}</th>`:'').join('')}<th class="k ka">Actions</th></tr></thead><tbody onclick="zTd(event,'${loan?'loan':'cf'}')">${a.slice(0,CFN).map((r,i)=>`<tr data-id="${r.id}" data-i="${i}">${v7Cells(r,i)}</tr>`).join('')||`<tr><td colspan="${V7C.length+2}" class="m" style="padding:26px">${loan?'No loan customers in this selection.':'No customers in this selection.'}</td></tr>`}</tbody></table></div>`+more};
 let V7RS;addEventListener('resize',()=>{clearTimeout(V7RS);V7RS=setTimeout(()=>{if(typeof VIEW!=='undefined'&&VIEW=='cf'&&$('cf_box'))cfList()},200)});
 
-function v7Tab(t){V7TAB=t;CFQ.loan='';CFQ.lst='';CFQ.app='';CFQ.lwby='';draw()}
+function v7Tab(t){V7TAB=t;CFQ.dsb='';CFQ.loan='';CFQ.lst='';CFQ.app='';CFQ.lwby='';draw()}
 async function v7LoanAdd(){const rs=CU().filter(r=>!r.l).sort((a,b)=>(a.f.name||'').localeCompare(b.f.name||''));if(!rs.length)return toast('Every customer already has a loan file');
  modal(`<h2>Add a customer to Loan</h2><p class="sub">Choose the customer who needs a loan. Their loan details can be filled in the next screen.</p><label>Customer<select id="v7la">${rs.map(r=>`<option value="${r.id}">${E(r.cid)} · ${E(r.f.name||'')}${r.city?' · '+E(r.city):''}</option>`).join('')}</select></label><div class="row" style="margin-top:12px"><button class="btn pri sp" onclick="v7LoanGo()">Add &amp; open</button><button class="btn" onclick="closeM()">Cancel</button></div>`)}
 async function v7LoanGo(){const id=val('v7la'),r0=G('files',id);if(!r0)return;const r=clone(r0);r.l=r.l||{};await v7Save(r,'loan added');closeM();cfOpen(id)}
@@ -2076,8 +2076,8 @@ VIEWS.cf=function(){const D=CD(),all=CU(),nl=all.filter(r=>r.l).length,loan=V7TA
  <div class="v7tabs"><button class="${!loan?'on':''}" onclick="v7Tab('all')">All customers <em>${all.length}</em></button><button class="ln ${loan?'on':''}" onclick="v7Tab('loan')">Loan customers <em>${nl}</em></button></div>
  <div class="card"><div class="tb6"><label>Search<input placeholder="File no. / name / mobile / address / consumer no. / DCR…" value="${E(CFQ.q)}" oninput="CFQ.q=this.value;cfList()" style="margin-top:3px"></label>
  <button class="sm v7fb" onclick="V7FO=!V7FO;draw()">${V7FO?'Hide filters ▴':'Filters ▾'}</button></div>
- <div class="v7fbox ${V7FO?'':'shut'}"><div class="tb6" style="margin-top:10px">${loan?sl('app','Bank',sd(D.bank))+sl('lst','Loan status',sd(D.lst))+sl('lwby','Loan work by',sd(D.lwby)):sl('wby','Work by',sd(D.wby))+sl('st','Status',sd(D.st))+sl('ws','Work status',sd(D.ws))+sl('loan','Loan',[['y','With loan'],['n','No loan']])}${sl('sp','Sales person',sd(SALESN6()))}${loan?'':sl('wk','Install work',sd(['Not started','In progress','Complete']))}${sl('doc','Documents',docOpts)}</div></div>
- <div class="row" style="margin-top:10px">${acts}<button class="sm nv" onclick="v8Mgr()">⚙ Columns &amp; size</button>${ME.admin?'<button class="sm nv" onclick="VIEW=\'set\';shell()">States &amp; cities</button><button class="sm nv" onclick="cfAdmin()">Dropdowns &amp; fields</button>':''}<button class="sm" onclick="ssdPick()">${SSD?'PC folder: '+E(SSD.name):'Choose PC folder'}</button></div></div><div id="cf_box"></div>`;cfList()};
+ <div class="v7fbox ${V7FO?'':'shut'}"><div class="tb6" style="margin-top:10px">${loan?sl('app','Application',sd(['BANK'].concat((D.bank||[]).filter(b=>b!='BANK'))))+sl('lst','Loan status',sd(D.lst))+sl('dsb','Disbursement',sd(DSB)):sl('st','Status',sd(D.st))+sl('ws','Work status',sd(D.ws))+sl('loan','Loan',[['y','With loan'],['n','No loan']])}${sl('sp','Sales person',sd(SALESN6()))}${loan?'':sl('wk','Install work',sd(['Not started','In progress','Complete']))}${sl('doc','Documents',docOpts)}</div></div>
+ <div class="row" style="margin-top:10px">${acts}<button class="sm nv" onclick="v8Mgr()">⚙ Columns &amp; size</button>${ME.admin?'<button class="sm nv" onclick="VIEW=\'set\';shell()">States &amp; cities</button><button class="sm nv" onclick="cfAdmin()">Dropdowns &amp; fields</button>':''}<button class="sm" onclick="ssdPick()">${SSD?'PC folder: '+E(SSD.name):'Choose PC folder'}</button><button class="sm nv" onclick="swOpen()">Sales work report</button></div></div><div id="cf_box"></div>`;cfList()};
 VIEWS.jobs=VIEWS.cf;
 
 
@@ -2103,18 +2103,18 @@ function cfDraw(){const D=CD(),sc=CFERR?0:(document.querySelector('#mod')||{}).s
    ${F('cno')}${F('imm')}${F('date')}
    <label>SALES PERSON<select onchange="CF.sales=this.value"><option value="">— choose —</option>${sp.map(s=>`<option ${s==CF.sales?'selected':''}>${E(s)}</option>`).join('')}</select></label>
    ${cfX(D,'c')}</div></div>
-  <div class="fs alt"><h3>2 · Work &amp; project cost</h3><div class="fx">${F('wby')}<label>LOAN (Yes / No)<select onchange="cfLoanSet(this.value)"><option value="n" ${CF.l?'':'selected'}>No</option><option value="y" ${CF.l?'selected':''}>Yes</option></select></label>${F('st')}${F('ws')}
+  <div class="fs alt"><h3>2 · Work &amp; project cost</h3><div class="fx"><label>LOAN (Yes / No)<select onchange="cfLoanSet(this.value)"><option value="n" ${CF.l?'':'selected'}>No</option><option value="y" ${CF.l?'selected':''}>Yes</option></select></label>${F('st')}${F('ws')}
     ${v7MInp('cost','PROJECT COST (TOTAL)','Total cost of the project')}${v7MInp('ssub','STATE SUBSIDY','Gujarat / state government subsidy')}${v7MInp('subr','CENTRAL GOVT SUBSIDY','Subsidy receive amount – central government')}
     <div class="payb"><div><span>Payment with subsidy</span><em>Customer pays upfront = project cost (subsidy comes later)</em></div><b id="pay_w">₹ 0</b></div>
     <div class="payb"><div><span>Payment after subsidy</span><em>Project cost − state subsidy − central subsidy</em></div><b id="pay_v">₹ 0</b></div>
     ${F('rem','text','wd')}</div></div>
-   <div class="fs"><h3>3 · Panels &amp; inverter <span class="m">(capacity is calculated from panels × watt)</span></h3><div class="fx">${X('pm','PANEL MAKE / MODEL','text','w2')}<label>TOTAL PANELS (No Of Panel)<input type="number" inputmode="numeric" value="${E(CF.f.np??'')}" oninput="cfV('f','np',this.value);v7Pnl();cfSerGrid();v8SerUp()"></label><label>PENAL WP<input type="number" inputmode="numeric" value="${E(CF.f.wp??'')}" oninput="cfV('f','wp',this.value);v7Pnl()"></label>${X('inv','INVERTER SERIAL NO.','text','w2')}</div>
+   <div class="fs"><h3>3 · Panels &amp; inverter <span class="m">(capacity is calculated from panels × watt)</span></h3><div class="fx">${X('pm','PANEL MAKE / MODEL','text','w2')}<label>TOTAL PANELS (No Of Panel)<input id="cf_np" type="number" inputmode="numeric" value="${E(CF.f.np??'')}" oninput="cfV('f','np',this.value);v7Pnl()"></label><label>PENAL WP<input type="number" inputmode="numeric" value="${E(CF.f.wp??'')}" oninput="cfV('f','wp',this.value);v7Pnl()"></label></div>
     <div class="pnlsum" id="pn_sum"></div>
-    <div class="row" style="margin-top:6px"><b>PANEL SERIAL NUMBERS</b> <span class="tag b" id="pn_cnt"></span></div>
-    <div class="sg" id="pn_grid"></div>
-    <details style="margin-top:6px"><summary class="m" style="cursor:pointer">Paste all serial numbers at once (one per line)</summary><textarea id="pn_paste" rows="3" placeholder="one serial number per line"></textarea><button type="button" class="sm" style="margin-top:6px" onclick="cfSerPaste()">Fill the boxes</button></details></div>
+    <div class="fx" style="margin-top:10px">${X('ib','INVERTER BRAND','text','w2')}<label>INVERTER CAPACITY (kW)<input type="number" step="any" inputmode="decimal" value="${E(CF.f.ik??'')}" oninput="cfV('f','ik',this.value)"></label></div>
+    <div class="fx" style="margin-top:6px"><label class="wd">PANEL SERIAL NUMBERS <span class="m" style="text-transform:none">– paste all serial numbers at once (one per line)</span><textarea id="pn_ta" rows="6" oninput="cfPanTa(this)" placeholder="one serial number per line">${E(v6Ser(CF).join('\n'))}</textarea></label>
+     <label class="wd">INVERTER SERIAL NUMBERS <span class="m" style="text-transform:none">– one per line</span><textarea id="inv_ta" rows="3" oninput="cfInvTa(this)" placeholder="one serial number per line">${E(serList(CF.f.inv).join('\n'))}</textarea></label></div></div>
    <div class="fs alt"><h3>4 · Meter &amp; subsidy</h3><div class="fx">${F('dis')}${F('mq')}${F('div')}${F('sub')}${F('idt')}${F('scl')}${F('srv')}${F('dcre')}${F('dcr')}</div></div>
-  <div class="fs"><h3>5 · Loan details</h3>${CF.l?`<div class="m">Loan = Yes – this customer is in the Loan customers tab. Name, address, mobile, consumer no., capacity and project amount are taken from the customer details.</div><div class="fx">${CFL.map(([k,n,t,l])=>`<div>${cfIn('l',k,n,t,D[l])}</div>`).join('')}${cfX(D,'l')}</div>`:'<div class="m">Loan = No. Choose <b>Loan = Yes</b> in section 2 and this customer is added to Loan customers automatically – no manual entry needed.</div>'}</div>
+  <div class="fs"><h3>5 · Loan details</h3>${CF.l?`<div class="m">Loan = Yes – this customer is in the Loan customers tab. Name, address, mobile, consumer no., capacity and project amount are taken from the customer details.</div>${cfLoanForm(D)}`:'<div class="m">Loan = No. Choose <b>Loan = Yes</b> in section 2 and this customer is added to Loan customers automatically – no manual entry needed.</div>'}</div>
    <div class="fs"><h3>6 · Documents <span class="tag ${have==need.length?'g':'s'}">${have}/${need.length}</span></h3>${SSD?'':'<div class="card warn">Documents are saved on the PC folder only. Open this on the Master PC, or <button class="sm" onclick="ssdPick()">Choose PC folder</button></div>'}
    <div class="fx">${need.map(t=>{const ds=(CF.docs||[]).map((d,i)=>[d,i]).filter(x=>x[0].t==t),pn=PEND.map((p,i)=>[p,i]).filter(x=>x[0].t==t);return `<div class="card" style="margin:6px 0"><b>${E(t)}</b>${ds.map(([d,i])=>`<div class="m">✓ ${E(d.n)} <button class="sm" onclick="cfShow('${CF.id}',${i})">Open</button> <button class="sm dg" onclick="cfDocDel(${i})">✕</button></div>`).join('')}${pn.map(([p,i])=>`<div class="m">${E(p.f.name)} (saves on Save) <button class="sm dg" onclick="cfPendDel(${i})">✕</button></div>`).join('')}<input type="file" accept="image/*,application/pdf" multiple onchange="cfPick('${E(t)}',this)"></div>`}).join('')}</div></div>
   <div class="v7bar"><button class="btn pri sp" onclick="cfSave()">Save</button>${CF.id&&ME.admin?'<button class="btn dg" onclick="cfDel()">Delete</button>':''}<button class="btn" onclick="closeM()">Cancel</button></div>`);
@@ -2148,10 +2148,10 @@ function cfView(id){const r=G('files',id);if(!r)return;v7LbX();Object.keys(V7DOC
  rec=L('moves').filter(m=>m.type=='in'&&m.cust==r.id).sort((a,b)=>(b.ts||'').localeCompare(a.ts||'')),pend=v7Pend(r),docs=r.docs||[];
  bigModal(`<div class="row"><h2 class="sp">${E(r.cid)} – ${E(r.f.name||'')}</h2><button class="sm" onclick="closeM()">Close</button></div><div class="row" style="margin:4px 0">${r.l?'<i class="tag ln">LOAN</i>':''}${zst(r.f.st)}${zst(r.f.ws)}${wkTag6(j)}<span class="tag ${pend.length?'s':'g'}">Docs ${cfNeed(r).length-pend.length}/${cfNeed(r).length}</span></div>
   <div class="vcard"><h3>Customer</h3><div class="vg">${R('name')}${R('mob')}${row('Address',r.f.addr)}${row('State / City',[r.state,r.city].filter(Boolean).join(' › '))}${R('cno')}${R('imm')}${R('date')}${row('Sales person',r.sales)}</div></div>
-  <div class="vcard"><h3>Work &amp; money</h3><div class="vg">${R('wby')}${row('Project cost (total)',mny(r.f.cost))}${row('State subsidy',mny(r.f.ssub))}${row('Central govt subsidy',mny(r.f.subr))}${R('rem')}</div><div class="vpay"><span>Payment with subsidy (upfront)</span><b>${mny(v7With(r))}</b></div><div class="vpay"><span>Payment after subsidy</span><b>${pay===''?'—':zm(pay)}</b></div></div>
-  <div class="vcard"><h3>Panels &amp; inverter</h3><div class="vg">${row('Panels',[r.f.pm,np&&wp?np+' × '+wp+' Wp':(np||wp?(np||'—')+' × '+(wp||'—')+' Wp':'')].filter(Boolean).join(' · '))}${row('Capacity',cap===''?'':cap+' kW')}${row('Inverter serial no.',r.f.inv)}</div>${ser.length?`<div class="vg" style="margin-top:6px">${ser.map((s,i)=>row('PENAL '+(i+1),s)).join('')}</div>`:''}</div>
+  <div class="vcard"><h3>Work &amp; money</h3><div class="vg">${row('Project cost (total)',mny(r.f.cost))}${row('State subsidy',mny(r.f.ssub))}${row('Central govt subsidy',mny(r.f.subr))}${R('rem')}</div><div class="vpay"><span>Payment with subsidy (upfront)</span><b>${mny(v7With(r))}</b></div><div class="vpay"><span>Payment after subsidy</span><b>${pay===''?'—':zm(pay)}</b></div></div>
+  <div class="vcard"><h3>Panels &amp; inverter</h3><div class="vg">${row('Panels',[r.f.pm,np&&wp?np+' × '+wp+' Wp':(np||wp?(np||'—')+' × '+(wp||'—')+' Wp':'')].filter(Boolean).join(' · '))}${row('Capacity',cap===''?'':cap+' kW')}${row('Inverter brand',r.f.ib)}${row('Inverter capacity',r.f.ik?r.f.ik+' kW':'')}${row('Inverter serial no.',invL(r).join(', '))}</div>${ser.length?`<div class="vg" style="margin-top:6px">${ser.map((s,i)=>row('PENAL '+(i+1),s)).join('')}</div>`:''}</div>
   <div class="vcard"><h3>Meter &amp; subsidy</h3><div class="vg">${R('dis')}${R('mq')}${R('div')}${R('sub')}${R('idt')}${R('scl')}${R('srv')}${R('dcre')}${R('dcr')}</div></div>
-  ${r.l?`<div class="vcard"><h3>Loan</h3><div class="vg">${CFL.map(([k,n,t])=>row(n,f(t,k,r.l[k]))).join('')}</div></div>`:''}
+  ${r.l?`<div class="vcard"><h3>Loan</h3><div class="vg">${CFL.filter(x=>x[0]!='lwby'&&x[0]!='ly').map(([k,n,t])=>row(n,f(t,k,r.l[k]))).join('')}${row('LOAN YEAR',r.l.ly?r.l.ly+(r.l.lyu=='m'?' months':' years')+' '+lyBr(r.l):'')}${row('BANK NAME',r.l.bn)}${row('DISBURSEMENT STATUS',dsbStatus(r.l))}</div></div>`:''}
   <div class="vcard"><h3>Installation work</h3><div class="vg">${row('Fabrication',[JST[j.fabSt||'pending'],j.fabName||staffName(j.fabBy),j.fabDate&&fd(j.fabDate)].filter(Boolean).join(' · '))}${row('Wiring',[JST[j.wireSt||'pending'],j.wireName||staffName(j.wireBy),j.wireDate&&fd(j.wireDate)].filter(Boolean).join(' · '))}${row('Net meter',[j.meterSt,j.meterNo,j.meterDate&&fd(j.meterDate)].filter(Boolean).join(' · '))}${row('Commissioning',[j.comSt,j.comDate&&fd(j.comDate)].filter(Boolean).join(' · '))}</div></div>
   <div class="vcard"><h3>Stock issued to this customer <span class="tag b">${iss.length}</span></h3><div class="issl">${iss.map(m=>{const i=G('items',m.item)||{name:'?',unit:''};return `<div class="it"><span><b>${m.qty} ${E(i.unit)}</b> ${E(i.name)} <span class="m">· ${fd(m.date)}${m.godown?' · from '+E(m.godown):''} · issued by ${E(staffName(m.by))} → ${E(staffName(m.to))}${m.extra?' · EXTRA':''}</span></span></div>`}).join('')||'<div class="m">Nothing issued yet.</div>'}</div></div>
   ${rec.length?`<div class="vcard"><h3>Stock received for this customer <span class="tag b">${rec.length}</span></h3><div class="issl">${rec.map(m=>{const i=G('items',m.item)||{name:'?',unit:''};return `<div class="it"><span><b>${m.qty} ${E(i.unit)}</b> ${E(i.name)} <span class="m">· ${fd(m.date)}${m.to?' · from '+E(m.to):''}${m.godown?' · into '+E(m.godown):''}</span></span></div>`}).join('')}</div></div>`:''}
@@ -2558,5 +2558,115 @@ VIEWS.calls=VIEWS.tele=function(){$('main').innerHTML=ME.admin?admin():tele();
  else if(!ME.admin){if(T=='list')fillCust('M');else if(T=='fut')fillCust('F');else if(T=='all')fillCust('A')}};
 Object.assign(window,{cxSet,cxMore,cxTab,cxGo,cxToggle,cxOnly,cxReassign,cxDelCamp,cxDelF,cxXls,cxXlsL,cxSave});
 })();
+</script>
+<style id="v10css">
+/* ===== v10: customer table – stable cell editing, everything centred ===== */
+.xt.fit th,.xt.fit td{text-align:center!important}
+.xt.fit td.wrap,.xt.fit td.wrap2{text-align:center!important}
+.xt.fit td.ed-on{padding-top:6px!important;padding-bottom:6px!important;overflow:hidden!important}
+.xt.fit td.ed-on input,.xt.fit td.ed-on select{width:100%!important;min-width:0!important;max-width:100%!important;height:24px!important;margin:-3px 0!important;padding:0 4px!important;font-size:13px!important;box-sizing:border-box!important;text-align:center!important;text-align-last:center!important;border-radius:6px!important;line-height:1}
+.xt.fit td.ed-on select{padding-right:0!important;background-image:none!important}
+.xt.fit td input,.xt.fit td select{text-align:center}
+.v10sp{border-color:#9ccf8f!important;background:#f1faee!important}
+.v10sp b{color:#2f6f1f!important}
+.v10ly{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.v10ly input{flex:1 1 80px;min-width:80px;width:auto}.v10ly select{width:auto!important;min-width:92px}.v10ly b{white-space:nowrap;font-size:13px;color:var(--navy)}
+.v10bk{display:grid;grid-template-columns:1fr 1fr;gap:10px;grid-column:span 2}
+@media(max-width:620px){.v10bk{grid-template-columns:1fr;grid-column:1/-1}}
+.v10ds{border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin:8px 0;background:#f8faf7;grid-column:1/-1}
+.v10ds .fx{margin-top:6px}
+.v10st{display:inline-block;font-size:11.5px;font-weight:800;padding:3px 10px;border-radius:99px;letter-spacing:.03em}
+.v10st.g{background:#d9f0d2;color:#2f6f1f}.v10st.s{background:#ffe9b0;color:#7a5200}.v10st.r{background:#fadbd8;color:#b3261e}
+.sw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin:12px 0}
+.sw-c{background:#fff;border:1px solid var(--bd);border-top:4px solid var(--gr);border-radius:14px;padding:14px;cursor:pointer;box-shadow:0 1px 2px #0e223308}
+.sw-c:hover{box-shadow:0 4px 14px #0e223318}
+.sw-c h4{margin:0 0 2px;font-size:16px}.sw-c .m{margin:0}
+.sw-g{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+.sw-g div{background:#f3f7f2;border-radius:9px;padding:6px 10px;font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.03em}
+.sw-g b{display:block;font-size:18px;color:var(--navy);text-transform:none}
+.sw-g .p b{color:#b3261e}
+</style>
+<script>
+/* ===========================================================
+   v10 – Customers: work-by removed, inverter details, serial
+   textareas, bank / loan period / disbursement, sales work report
+   =========================================================== */
+const invL=r=>serList(r.f.inv);
+const DSB_FULL='FULL AMOUNT',DSB_TR='TRANCH (1ST & 2ND)',DSB=['FULL DISBURSED','1ST TRANCH PENDING','2ND TRANCH PENDING','DISBURSEMENT PENDING'];
+const dsbType=l=>{l=l||{};return l.dt||(+l.da>0?DSB_FULL:(+l.t1>0||+l.t2>0)?DSB_TR:'')};
+const dsbStatus=l=>{l=l||{};const t=dsbType(l);if(t==DSB_TR)return +l.t1>0&&+l.t2>0?'FULL DISBURSED':+l.t1>0?'2ND TRANCH PENDING':'1ST TRANCH PENDING';return +l.da>0?'FULL DISBURSED':'DISBURSEMENT PENDING'};
+const dsbKey=r=>r.l?dsbStatus(r.l):'';
+const dsbTag=s=>`<span class="v10st ${s=='FULL DISBURSED'?'g':s=='DISBURSEMENT PENDING'?'r':'s'}">${E(s)}</span>`;
+const lyMonths=l=>{l=l||{};const v=+l.ly;return v>0?Math.round(l.lyu=='m'?v:v*12):''};
+const lyBr=l=>{const m=lyMonths(l);if(m==='')return '';if((l||{}).lyu=='m'){const y=Math.floor(m/12),r=m%12;return y?'('+y+' yr'+(r?' '+r+' mo':'')+')':'('+m+' months)'}return '('+m+' months)'};
+/* disbursement type stored with the other loan fields */
+if(!CFL.some(a=>a[0]=='dt')){const i=CFL.findIndex(a=>a[0]=='da');CFL.splice(i<0?CFL.length:i,0,['dt','DISBURSEMENT TYPE','text'])}
+
+/* ---- form: section 3 handlers ---- */
+function cfPanTa(el){const a=serList(el.value);CF.f.pan=a.join('\n');if(a.length>(+CF.f.np||0)){CF.f.np=String(a.length);const n=$('cf_np');if(n)n.value=CF.f.np;v7Pnl()}}
+function cfInvTa(el){CF.f.inv=serList(el.value).join('\n')}
+cfSerGrid=function(){};v8SerUp=function(){};
+/* ---- form: section 5 ---- */
+function cfLSet(k,v){CF.l=CF.l||{};CF.l[k]=v;cfDraw()}
+function cfLyUp(v){CF.l=CF.l||{};CF.l.ly=v;const e=$('ly_m');if(e)e.textContent=lyBr(CF.l)}
+function cfLyU(u){CF.l=CF.l||{};CF.l.lyu=u;const e=$('ly_m');if(e)e.textContent=lyBr(CF.l)}
+function cfLoanForm(D){const l=CF.l||{},I=(k,n,t,o)=>`<div>${cfIn('l',k,n,t,o)}</div>`,app=l.app||'',
+ banks=['BANK'].concat((D.bank||[]).filter(b=>b!='BANK')),bo=[...new Set(banks.concat(app).filter(Boolean))],
+ known=[...new Set(L('files').map(r=>r.l&&r.l.bn).filter(Boolean))],ty=dsbType(l),st=dsbStatus(l);
+ return `<div class="fx"><div class="v10bk"><label>APPLICATION<select onchange="cfLSet('app',this.value)"><option value="">— choose —</option>${bo.map(b=>`<option ${b==app?'selected':''}>${E(b)}</option>`).join('')}</select></label>${app=='BANK'?`<label>BANK NAME<input list="cf_bnl" value="${E(l.bn||'')}" placeholder="Type the bank name" oninput="cfV('l','bn',this.value)" autocomplete="off"><datalist id="cf_bnl">${known.map(b=>`<option value="${E(b)}">`).join('')}</datalist></label>`:'<span></span>'}</div>
+  ${I('lst','STATUS','dd',D.lst)}${I('lgd','LOG IN DATE','date')}
+  <div><label>LOAN YEAR<div class="v10ly"><input type="number" step="any" inputmode="decimal" value="${E(l.ly??'')}" oninput="cfLyUp(this.value)"><select onchange="cfLyU(this.value)"><option value="y" ${l.lyu=='m'?'':'selected'}>Years</option><option value="m" ${l.lyu=='m'?'selected':''}>Months</option></select><b id="ly_m">${lyBr(l)}</b></div></label></div>
+  ${I('lamt','LOAN AMT','num')}${I('sa','SENCTION AMOUNT','num')}${I('sd','SENCTION DATE','date')}
+  <div class="v10ds"><label>DISBURSEMENT<select onchange="cfLSet('dt',this.value)"><option value="">— choose —</option><option value="${DSB_FULL}" ${ty==DSB_FULL?'selected':''}>Full amount (one payment)</option><option value="${DSB_TR}" ${ty==DSB_TR?'selected':''}>1st tranche &amp; 2nd tranche (2 parts)</option></select></label>
+   ${ty==DSB_FULL?`<div class="fx">${I('da','DISBURSEMENT AMOUNT','num')}${I('dd','DISBURSEMENT DATE','date')}</div>`:ty==DSB_TR?`<div class="fx">${I('t1','1ST TRANCH 80%','num')}${I('t1d','1ST TRANCH DATE','date')}${I('t2','2ND TRANCH 20%','num')}${I('t2d','2ND TRANCH DATE','date')}</div>`:'<div class="m" style="margin-top:6px">Choose how the bank pays – full amount or 2 tranches.</div>'}
+   <div style="margin-top:8px">Status: ${dsbTag(st)}</div></div>
+  ${I('lrem','REMARK','text').replace('<div>','<div class="wd" style="grid-column:1/-1">')}${I('mail','EMAIL - ID','text')}${cfX(D,'l')}</div>`}
+
+/* ---- table columns ---- */
+const _v7CC10=v7CustCols;
+v7CustCols=function(rows){let c=_v7CC10(rows).filter(x=>x.n!='WORK BY');const i=c.findIndex(x=>x.n=='INVERTER SERIAL NO.');if(i<0)return c;
+ const ib={n:'INVERTER BRAND',c:1,cls:'',r:r=>E(r.f.ib||''),e:{t:'text',get:r=>r.f.ib,set:(r,v)=>{r.f.ib=v}}},
+  ik={n:'INVERTER kW',c:1,cls:'',r:r=>r.f.ik?E(r.f.ik)+' kW':'',e:{t:'num',get:r=>r.f.ik,set:(r,v)=>{r.f.ik=v}}},
+  iv={n:'INVERTER SERIAL NO.',c:1,cls:'',r:r=>E(invL(r).join(', ')),e:{t:'text',get:r=>invL(r).join(', '),set:(r,v)=>{r.f.inv=serList(v).join('\n')}}};
+ c.splice(i,1,ib,ik,iv);return c};
+const _v7LC10=v7LoanCols;
+v7LoanCols=function(){const D=CD();let c=_v7LC10().filter(x=>x.n!='WORK BY');
+ const ai=c.findIndex(x=>x.n=='APPLICATION');if(ai>-1){c[ai].e.o=()=>['BANK'].concat((D.bank||[]).filter(b=>b!='BANK'));c.splice(ai+1,0,{n:'BANK NAME',c:1,cls:'',r:r=>E((r.l||{}).bn||''),e:{t:'text',get:r=>(r.l||{}).bn,set:(r,v)=>{r.l=r.l||{};r.l.bn=v}}})}
+ const yi=c.findIndex(x=>x.n=='LOAN YEAR');if(yi>-1)c[yi].r=r=>{const l=r.l||{};return l.ly===''||l.ly==null?'':E(l.ly)+(l.lyu=='m'?' mo':' yr')+' <span class="m">'+E(lyBr(l))+'</span>'};
+ const di=c.findIndex(x=>x.n=='DISBURSEMENT AMOUNT');
+ const dt={n:'DISBURSEMENT TYPE',c:1,cls:'',r:r=>E(dsbType(r.l)),e:{t:'dd',o:()=>[[DSB_FULL,'Full amount'],[DSB_TR,'1st & 2nd tranche']],get:r=>dsbType(r.l),set:(r,v)=>{r.l=r.l||{};r.l.dt=v}}},
+  ds={n:'DISBURSEMENT STATUS',c:1,cls:'',r:r=>r.l?dsbTag(dsbStatus(r.l)):''};
+ c.splice(di<0?c.length:di,0,dt,ds);return c};
+
+/* ---- summary: sales person total kW ---- */
+function salesFocus(){if(CFQ.sp)return CFQ.sp;const q=String(CFQ.q||'').trim().toLowerCase();if(q.length<3)return '';const m=SALESN6().filter(n=>n.toLowerCase().includes(q));return m.length==1?m[0]:''}
+function v10Sum(a,base){const sp=V7TAB=='loan'?'':salesFocus();let h=base;
+ if(V7TAB=='loan')return h.replace('</span>','</span><span><b>'+a.filter(r=>dsbKey(r)=='FULL DISBURSED').length+'</b>full disbursed</span><span><b>'+a.filter(r=>/TRANCH PENDING/.test(dsbKey(r))).length+'</b>tranche pending</span>');
+ if(!sp)return h;const all=CU().filter(r=>(r.sales||'')==sp),kw=l=>+l.reduce((t,r)=>t+(+v7Cap(r)||0),0).toFixed(2),done=all.filter(r=>jobStat(v6VJob(r))=='Complete');
+ return `<span class="v10sp"><b>${kw(all)} kW</b>${E(sp)} – total (${all.length} customers)</span><span class="v10sp"><b>${kw(done)} kW</b>work complete (${done.length})</span><span class="v10sp" style="cursor:pointer" onclick="swDetail('${E(sp).replace(/'/g,"\\'")}','')"><b>Open ›</b>work report</span>`+h}
+/* ---- sales work report (popup) ---- */
+let SWN='',SWF='';
+const swGet=n=>CU().filter(r=>(r.sales||'')==n);
+function swStat(r){const j=v6VJob(r),done=jobStat(j)=='Complete';return{done,fab:j.fabSt!='done',wire:j.wireSt!='done',doc:v7Pend(r).length>0,j}}
+function swOpen(){const names=[...new Set(SALESN6().concat(CU().map(r=>r.sales||'').filter(Boolean)))];if(CU().some(r=>!r.sales))names.push('');
+ const kw=l=>+l.reduce((t,r)=>t+(+v7Cap(r)||0),0).toFixed(2);
+ bigModal(`<div class="row"><h2 class="sp">Sales work report</h2><button class="sm" onclick="closeM()">Close</button></div><p class="sub">Work completed by each sales person and what is still pending. Tap a card to see the customers.</p><div class="sw-grid">${names.map(n=>{const rs=swGet(n),s=rs.map(swStat),dn=s.filter(x=>x.done).length,q=n.replace(/'/g,"\\'");
+  return `<div class="sw-c" onclick="swDetail('${E(q)}','')"><h4>${E(n||'Not assigned')}</h4><div class="m">${rs.length} customers · <b>${kw(rs)} kW</b></div><div class="sw-g"><div>Work complete<b>${dn}</b></div><div>Complete kW<b>${kw(rs.filter((r,i)=>s[i].done))}</b></div><div class="p">Fabrication pending<b>${s.filter(x=>!x.done&&x.fab).length}</b></div><div class="p">Wiring pending<b>${s.filter(x=>!x.done&&x.wire).length}</b></div><div class="p">Document pending<b>${s.filter(x=>x.doc).length}</b></div><div class="p">Work pending<b>${rs.length-dn}</b></div></div></div>`}).join('')||'<div class="card sub">No sales persons yet.</div>'}</div>`)}
+function swDetail(n,f){SWN=n;SWF=f||'';const rs=swGet(n),s=rs.map(r=>[r,swStat(r)]),T=[['','All',()=>1],['done','Work complete',x=>x.done],['fab','Fabrication pending',x=>!x.done&&x.fab],['wire','Wiring pending',x=>!x.done&&x.wire],['doc','Document pending',x=>x.doc],['pend','Work pending',x=>!x.done]],cur=T.find(t=>t[0]==SWF)||T[0],list=s.filter(([r,x])=>cur[2](x)),kw=l=>+l.reduce((t,r)=>t+(+v7Cap(r)||0),0).toFixed(2);
+ bigModal(`<div class="row"><h2 class="sp">${E(n||'Not assigned')} <span class="m">· ${rs.length} customers · ${kw(rs)} kW</span></h2><button class="sm" onclick="swOpen()">← All sales</button><button class="sm" onclick="closeM()">Close</button></div>
+ <div class="chips" style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0">${T.map(t=>`<button class="sm ${SWF==t[0]?'pri':''}" onclick="swDetail(SWN,'${t[0]}')">${t[1]} · ${s.filter(([r,x])=>t[2](x)).length}</button>`).join('')}</div>
+ <div class="zs"><span><b>${list.length}</b>customers shown</span><span><b>${kw(list.map(x=>x[0]))}</b>kW</span></div>
+ <div class="xl" style="max-height:60vh"><table class="xt fit"><thead><tr><th>#</th><th>File</th><th>Customer</th><th>Mobile</th><th>kW</th><th>Fabrication</th><th>Wiring</th><th>Documents</th><th>Work</th></tr></thead><tbody>${list.map(([r,x],i)=>`<tr style="cursor:pointer" onclick="closeM();cfView('${r.id}')"><td>${i+1}</td><td><b>${E(r.cid)}</b></td><td>${E(r.f.name||'')}</td><td>${E(r.f.mob||'')}</td><td>${E(v7Cap(r))}</td><td>${x.j.fabSt=='done'?'<i class="tag g">Done</i>':'<i class="tag s">Pending</i>'}</td><td>${x.j.wireSt=='done'?'<i class="tag g">Done</i>':'<i class="tag s">Pending</i>'}</td><td>${x.doc?'<i class="tag s">Pending: '+E(v7Pend(r).join(', '))+'</i>':'<i class="tag g">Complete</i>'}</td><td>${wkTag6(x.j)}</td></tr>`).join('')||'<tr><td colspan="9" class="m" style="padding:22px">No customers.</td></tr>'}</tbody></table></div>`)}
+
+/* ---- stable cell editing (size never jumps) ---- */
+const _zTd10=zTd;
+zTd=function(e,T){const td=e.target.closest&&e.target.closest('td.ed');let lock=false;
+ if(td&&!e.target.closest('a,button')&&!td.querySelector('input,select')){const cs=getComputedStyle(td),r=td.getBoundingClientRect(),w=cs.boxSizing=='border-box'?r.width:td.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight),h=Math.round(r.height);
+  ['width','min-width','max-width'].forEach(p=>td.style.setProperty(p,Math.round(w)+'px','important'));td.style.setProperty('height',h+'px','important');td.classList.add('ed-on');lock=true}
+ _zTd10(e,T);
+ if(lock&&td.isConnected&&!td.querySelector('input,select')){['width','min-width','max-width','height'].forEach(p=>td.style.removeProperty(p));td.classList.remove('ed-on')}};
+/* ---- keep the scroll position when the table redraws (e.g. "+ Panel") ---- */
+const _cfList10=cfList;
+cfList=function(){const x=document.querySelector('#cf_box .xl'),sl=x?x.scrollLeft:0,st=x?x.scrollTop:0;_cfList10();const y=document.querySelector('#cf_box .xl');if(y&&(sl||st)){y.scrollLeft=sl;y.scrollTop=st}};
+Object.assign(window,{cfPanTa,cfInvTa,cfLSet,cfLyUp,cfLyU,swOpen,swDetail});
 </script>
 </body></html>
