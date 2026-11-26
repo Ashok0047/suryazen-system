@@ -2037,7 +2037,7 @@ let V7C=[];
 const v7Cells=(r,i)=>`<td class="k k1">${i+1}</td>`+V7C.map((c,x)=>v8Vis(c)?`<td class="${c.cls||''}${c.e?' ed':''} ${c.cl||''}" data-c="${x}"${c.open?` onclick="cfOpen('${r.id}')"`:''}>${c.r(r)}</td>`:'').join('')+`<td class="k ka"><div class="ab"><button class="sm" onclick="cfView('${r.id}')">View</button><button class="sm nv" onclick="cfOpen('${r.id}')">Edit</button>${ME.admin?`<button class="sm dg" onclick="cfDelId('${r.id}')">Delete</button>`:''}</div></td>`;
 const v7Sum=a=>v10Sum(a,v7Sum0(a));const v7Sum0=a=>{const S=k=>a.reduce((t,r)=>t+(+r.f[k]||0),0),kp=a.reduce((t,r)=>t+(+v7Cap(r)||0),0),SL=k=>a.reduce((t,r)=>t+((r.l&&+r.l[k])||0),0),M=n=>zm(n)||'₹ 0',dp=a.filter(r=>v7Pend(r).length).length;
  if(V7TAB=='loan')return `<span><b>${a.length}</b>loan customers</span><span><b>${M(SL('lamt'))}</b>loan amount</span><span><b>${M(SL('sa'))}</b>sanctioned</span><span><b>${M(SL('da')+SL('t1')+SL('t2'))}</b>disbursed</span><span><b>${dp}</b>docs pending</span>`;
- return `<span><b>${a.length}</b>customers</span><span><b>${+kp.toFixed(1)}</b>kW capacity</span><span><b>${M(S('cost'))}</b>project cost</span><span><b>${M(S('ssub'))}</b>state subsidy</span><span><b>${M(S('subr'))}</b>central subsidy</span><span><b>${M(a.reduce((t,r)=>t+(+v7With(r)||0),0))}</b>payment with subsidy</span><span><b>${M(a.reduce((t,r)=>t+(+v7Pay(r)||0),0))}</b>payment after subsidy</span><span><b>${a.filter(r=>r.l).length}</b>with loan</span><span><b>${dp}</b>docs pending</span><span><b>${a.filter(r=>jobStat(v6VJob(r))!='Complete').length}</b>work pending</span>`};
+ return `<span><b>${a.length}</b>customers</span><span><b>${+kp.toFixed(1)}</b>kW capacity</span><span><b>${M(S('cost'))}</b>project cost</span><span><b>${M(S('ssub'))}</b>state subsidy</span><span><b>${M(S('subr'))}</b>central subsidy</span><span><b>${M(a.reduce((t,r)=>t+(+v7Pay(r)||0),0))}</b>payment after subsidy</span><span><b>${a.filter(r=>r.l).length}</b>with loan</span><span><b>${dp}</b>docs pending</span><span><b>${a.filter(r=>jobStat(v6VJob(r))!='Complete').length}</b>work pending</span>`};
 const v7Save=async(r,lab)=>{v7Norm(r);r.upd=nowT();await cfPut(r);try{const e=document.querySelectorAll('.v7tabs em');if(e.length>1){e[0].textContent=CU().length;e[1].textContent=CU().filter(x=>x.l).length}}catch(x){}try{await v6SyncJob(r,false)}catch(x){}if(SSD)try{cfDetails(r)}catch(x){}try{act('Customer '+r.cid+' updated: '+lab)}catch(x){}};
 zTbl.cf={rec:id=>G('files',id),cols:()=>V7C,cells:v7Cells,sum:()=>{const e=$('cf_sum');if(e)e.innerHTML=v7Sum(v7Fil())},save:v7Save};
 zTbl.loan={rec:id=>G('files',id),cols:()=>V7C,cells:v7Cells,sum:()=>{const e=$('cf_sum');if(e)e.innerHTML=v7Sum(v7Fil())},save:v7Save};
@@ -2048,7 +2048,7 @@ const v7Card=r=>{const a=cfNeed(r).length,p=v7Pend(r),pay=v7Pay(r),np=+r.f.np||0
  const loanBox=L?`<div class="cc-l"><b>LOAN</b> · ${E(L.app||'—')} · ${L.lst?zst(L.lst):'—'}${L.lamt?' · <b>'+zm(L.lamt)+'</b>':''}${V7TAB=='loan'?`<div class="m" style="margin-top:4px">${[L.lwby&&'Work by '+L.lwby,L.sa&&'Sanction '+zm(L.sa),L.da&&'Disbursed '+zm(L.da),L.lgd&&'Login '+fd(L.lgd)].filter(Boolean).map(E).join(' · ')}</div>`:''}</div>`:'';
  return `<div class="cc"><div class="cc-h"><div><b>${E(r.cid)}</b><span class="m">· ${E(r.city||'')}</span></div><div class="cc-tags">${L?'<i class="tag ln">LOAN</i>':''}${zst(r.f.st)}${zst(r.f.ws)}</div></div>
  <div class="cc-n">${E(r.f.name||'—')}</div>
- <div class="cc-g"><div><span>Mobile</span>${E(r.f.mob||'—')}</div><div><span>Panels / capacity</span>${pn||'—'}</div><div><span>Project cost</span>${zm(r.f.cost)||'—'}</div><div><span>Payment with subsidy</span>${zm(v7With(r))||'—'}</div><div class="pay"><span>Payment after subsidy</span><b>${pay===''?'—':zm(pay)}</b></div>${r.f.addr?`<div class="wd"><span>Address</span>${E(r.f.addr)}</div>`:''}</div>
+ <div class="cc-g"><div><span>Mobile</span>${E(r.f.mob||'—')}</div><div><span>Panels / capacity</span>${pn||'—'}</div><div><span>Project cost</span>${zm(r.f.cost)||'—'}</div><div class="pay"><span>Payment after subsidy</span><b>${pay===''?'—':zm(pay)}</b></div>${r.f.addr?`<div class="wd"><span>Address</span>${E(r.f.addr)}</div>`:''}</div>
  ${loanBox}
  <div><i class="tag ${p.length?'s':'g'}">Docs ${a-p.length}/${a}</i>${p.length?`<div class="dpend">${p.map(t=>`<i class="tag">${E(t)}</i>`).join('')}</div>`:''}</div>
  <div class="cc-b"><button class="sm" onclick="cfView('${r.id}')">View</button><button class="sm nv" onclick="cfOpen('${r.id}')">Edit</button>${ME.admin?`<button class="sm dg" onclick="cfDelId('${r.id}')">Delete</button>`:''}</div></div>`};
@@ -2105,7 +2105,7 @@ function cfDraw(){const D=CD(),sc=CFERR?0:(document.querySelector('#mod')||{}).s
    ${cfX(D,'c')}</div></div>
   <div class="fs alt"><h3>2 · Work &amp; project cost</h3><div class="fx"><label>LOAN (Yes / No)<select onchange="cfLoanSet(this.value)"><option value="n" ${CF.l?'':'selected'}>No</option><option value="y" ${CF.l?'selected':''}>Yes</option></select></label>${F('st')}${F('ws')}
     ${v7MInp('cost','PROJECT COST (TOTAL)','Total cost of the project')}${v7MInp('ssub','STATE SUBSIDY','Gujarat / state government subsidy')}${v7MInp('subr','CENTRAL GOVT SUBSIDY','Subsidy receive amount – central government')}
-    <div class="payb"><div><span>Payment with subsidy</span><em>Customer pays upfront = project cost (subsidy comes later)</em></div><b id="pay_w">₹ 0</b></div>
+    
     <div class="payb"><div><span>Payment after subsidy</span><em>Project cost − state subsidy − central subsidy</em></div><b id="pay_v">₹ 0</b></div>
     ${F('rem','text','wd')}</div></div>
    <div class="fs"><h3>3 · Panels &amp; inverter <span class="m">(capacity is calculated from panels × watt)</span></h3><div class="fx">${X('pm','PANEL MAKE / MODEL','text','w2')}<label>TOTAL PANELS (No Of Panel)<input id="cf_np" type="number" inputmode="numeric" value="${E(CF.f.np??'')}" oninput="cfV('f','np',this.value);v7Pnl()"></label><label>PENAL WP<input type="number" inputmode="numeric" value="${E(CF.f.wp??'')}" oninput="cfV('f','wp',this.value);v7Pnl()"></label></div>
@@ -2612,7 +2612,7 @@ function cfLyU(u){CF.l=CF.l||{};CF.l.lyu=u;const e=$('ly_m');if(e)e.textContent=
 function cfLoanForm(D){const l=CF.l||{},I=(k,n,t,o)=>`<div>${cfIn('l',k,n,t,o)}</div>`,app=l.app||'',
  banks=['BANK'].concat((D.bank||[]).filter(b=>b!='BANK')),bo=[...new Set(banks.concat(app).filter(Boolean))],
  known=[...new Set(L('files').map(r=>r.l&&r.l.bn).filter(Boolean))],ty=dsbType(l),st=dsbStatus(l);
- return `<div class="fx"><div class="v10bk"><label>APPLICATION<select onchange="cfLSet('app',this.value)"><option value="">— choose —</option>${bo.map(b=>`<option ${b==app?'selected':''}>${E(b)}</option>`).join('')}</select></label>${app=='BANK'?`<label>BANK NAME<input list="cf_bnl" value="${E(l.bn||'')}" placeholder="Type the bank name" oninput="cfV('l','bn',this.value)" autocomplete="off"><datalist id="cf_bnl">${known.map(b=>`<option value="${E(b)}">`).join('')}</datalist></label>`:'<span></span>'}</div>
+ return `<div class="fx"><div class="${app=='BANK'?'v10bk':''}"><label>APPLICATION<select onchange="cfLSet('app',this.value)"><option value="">— choose —</option>${bo.map(b=>`<option ${b==app?'selected':''}>${E(b)}</option>`).join('')}</select></label>${app=='BANK'?`<label>BANK NAME<input list="cf_bnl" value="${E(l.bn||'')}" placeholder="Type the bank name" oninput="cfV('l','bn',this.value)" autocomplete="off"><datalist id="cf_bnl">${known.map(b=>`<option value="${E(b)}">`).join('')}</datalist></label>`:''}</div>
   ${I('lst','STATUS','dd',D.lst)}${I('lgd','LOG IN DATE','date')}
   <div><label>LOAN YEAR<div class="v10ly"><input type="number" step="any" inputmode="decimal" value="${E(l.ly??'')}" oninput="cfLyUp(this.value)"><select onchange="cfLyU(this.value)"><option value="y" ${l.lyu=='m'?'':'selected'}>Years</option><option value="m" ${l.lyu=='m'?'selected':''}>Months</option></select><b id="ly_m">${lyBr(l)}</b></div></label></div>
   ${I('lamt','LOAN AMT','num')}${I('sa','SENCTION AMOUNT','num')}${I('sd','SENCTION DATE','date')}
@@ -2668,5 +2668,43 @@ zTd=function(e,T){const td=e.target.closest&&e.target.closest('td.ed');let lock=
 const _cfList10=cfList;
 cfList=function(){const x=document.querySelector('#cf_box .xl'),sl=x?x.scrollLeft:0,st=x?x.scrollTop:0;_cfList10();const y=document.querySelector('#cf_box .xl');if(y&&(sl||st)){y.scrollLeft=sl;y.scrollTop=st}};
 Object.assign(window,{cfPanTa,cfInvTa,cfLSet,cfLyUp,cfLyU,swOpen,swDetail});
+</script>
+<style id="v11css">
+.xt.fit td.ed-on select,.xt.fit td.ed-on input{font-size:14px!important;font-weight:700!important;color:#0f2a1d!important;background:#fff!important;border:1.5px solid var(--gr)!important;height:28px!important;margin:-4px 0!important}
+select option{font-size:15px;color:#0f2a1d;background:#fff}
+#mod select,.tb6 select,.row>select{font-size:15px;font-weight:600;color:#0f2a1d}
+.xt.fit td.ed select{font-weight:600;color:#0f2a1d}
+.xt.fit th{cursor:default}
+.pdl{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-top:5px;min-width:240px;max-width:320px;white-space:normal}
+.pdl i{font-style:normal;font-size:11.5px;font-weight:700;background:#fde8e6;color:#a3281e;border-radius:99px;padding:2px 9px;white-space:nowrap;line-height:1.3}
+</style>
+<script>
+/* ===== v11: scroll stays, money entry, rename headings, docs chips ===== */
+let V11SKIP=0;
+const _dr11=draw;
+draw=function(){const x=document.querySelector('#cf_box .xl'),sl=x?x.scrollLeft:0,st=x?x.scrollTop:0,sy=window.scrollY,mm=document.querySelector('#main'),ms=mm?mm.scrollTop:0,keep=!V11SKIP&&VIEW=='cf';V11SKIP=0;_dr11();
+ if(keep){const y=document.querySelector('#cf_box .xl');if(y){y.scrollLeft=sl;y.scrollTop=st}window.scrollTo(0,sy);const m2=document.querySelector('#main');if(m2)m2.scrollTop=ms}};
+const _vt11=v7Tab;v7Tab=function(t){V11SKIP=1;_vt11(t)};
+/* docs shown as clear chips */
+const docCell=r=>{const a=cfNeed(r).length,p=v7Pend(r);return `<i class="tag ${p.length?'s':'g'}">${a-p.length}/${a}</i>${p.length?`<div class="pdl"><i style="background:none;color:#a3281e;padding:2px 0">Pending:</i>${p.map(t=>`<i>${E(t)}</i>`).join('')}</div>`:''}`};
+const MONEY11=/^(project cost|state subsidy|central govt subsidy)$/i;
+const _cc11=v7CustCols;
+v7CustCols=function(rows){return _cc11(rows).filter(c=>!/^payment with subsidy$/i.test(c.n)).map(c=>{if(c.n=='DOCS')c.r=docCell;if(MONEY11.test(c.n)&&c.e){c.e.m=1;const os=c.e.set;c.e.set=(r,v)=>os(r,String(v).replace(/[^\d.]/g,''))}return c})};
+const _lc11=v7LoanCols;
+v7LoanCols=function(){return _lc11().map(c=>{if(c.n=='DOCS')c.r=docCell;if(/^(loan amt|senction amount|disbursement amount|1st tranch 80%|2nd tranch 20%)$/i.test(c.n)&&c.e){c.e.m=1;const os=c.e.set;c.e.set=(r,v)=>os(r,String(v).replace(/[^\d.]/g,''))}return c})};
+/* money fields: ₹ formatting while typing in a table cell */
+const _zTd11=zTd;
+zTd=function(e,T){const td=e.target.closest&&e.target.closest('td.ed');let col=null;if(td&&!td.querySelector('input,select')&&!e.target.closest('a,button')){try{col=zTbl[T].cols()[td.dataset.c]}catch(x){}}
+ _zTd11(e,T);
+ if(col&&col.e&&col.e.m){const el=td.querySelector('input');if(el&&!el.dataset.m){el.dataset.m=1;el.type='text';el.inputMode='decimal';el.placeholder='₹ 0';el.value=v7Fmt(el.value);
+  el.addEventListener('blur',()=>{el.value=el.value.replace(/[^\d.]/g,'')},true);
+  el.addEventListener('input',()=>{const pos=el.selectionStart,digs=el.value.slice(0,pos).replace(/[^\d.]/g,'').length,fm=v7Fmt(el.value);el.value=fm;let c=0,i=0;while(i<fm.length&&c<digs){if(/[\d.]/.test(fm[i]))c++;i++}try{el.setSelectionRange(i,i)}catch(x){}});try{el.select()}catch(x){}}}};
+/* rename column headings (double-click) – remembered */
+const _l11=v8Lay;
+v8Lay=function(){const o=_l11(),t=v8Tab();let r=lsG(V8K+'_'+t);if(!r){const p=G('pub','cfcols');if(p&&p[t])r=p[t]}o.names=(r&&r.names)||{};return o};
+function v11Ren(k,cur){const v=prompt('Column heading name\n(leave empty to go back to the original name)',cur);if(v===null)return;V8L.names=V8L.names||{};if(v.trim())V8L.names[k]=v.trim();else delete V8L.names[k];v8Save();cfList()}
+const _cl11=cfList;
+cfList=function(){_cl11();const ths=document.querySelectorAll('#cf_box thead th'),nm=V8L.names||{};V7C.filter(c=>v8Vis(c)).forEach((c,i)=>{const th=ths[i+1];if(!th||c.hdr||String(c.key).startsWith('@'))return;const n=nm[c.key];if(n){const t=[...th.childNodes].find(x=>x.nodeType==3);if(t)t.nodeValue=n;else th.insertAdjacentText('afterbegin',n)}th.title='Double-click to rename this heading';th.ondblclick=ev=>{if(ev.target.closest('.v8rz'))return;v11Ren(c.key,n||c.n)}})};
+Object.assign(window,{v11Ren});
 </script>
 </body></html>
